@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<!DOCTYPE syncml [
+<!ELEMENT SyncML (SyncHdr, SyncBody)>
+<!ELEMENT SyncHdr (VerDTD, VerProto, SessionID, MsgID, Target, Source, RespURI?, NoResp?, Cred?, Meta?)>
+<!ELEMENT SyncBody ((Alert | Atomic | Copy | Exec | Get | Map | Put | Results | Search | Sequence | Status | Sync | Add | Replace | Delete)+, Final?)>
+<!ELEMENT Archive EMPTY>
+<!ELEMENT Cmd (#PCDATA)>
+<!ELEMENT Chal (Meta)>
+<!ELEMENT CmdID (#PCDATA)>
+<!ELEMENT CmdRef (#PCDATA)>
+<!ELEMENT Cred (Meta?, Data)>
+<!ELEMENT Final EMPTY>
+<!ELEMENT Lang (#PCDATA)>
+<!ELEMENT LocName (#PCDATA)>
+<!ELEMENT LocURI (#PCDATA)>
+<!ELEMENT MoreData EMPTY>
+<!ELEMENT MsgID (#PCDATA)>
+<!ELEMENT MsgRef (#PCDATA)>
+<!ELEMENT NoResp EMPTY>
+<!ELEMENT NoResults EMPTY>
+<!ELEMENT NumberOfChanges (#PCDATA)>
+<!ELEMENT RespURI (#PCDATA)>
+<!ELEMENT SessionID (#PCDATA)>
+<!ELEMENT SftDel EMPTY>
+<!ELEMENT Source (LocURI, LocName?)>
+<!ELEMENT Target (LocURI, LocName?)>
+<!ELEMENT TargetRef (#PCDATA)>
+<!ELEMENT VerProto (#PCDATA)>
+<!ELEMENT Item (Target?, Source?, Meta?, Data?, MoreData?)>
+<!ELEMENT Add (CmdID, NoResp?, Cred?, Meta?, Item+)>
+<!ELEMENT Alert (CmdID, NoResp?, Cred?, Data?, Item*)>
+<!ELEMENT Atomic (CmdID, NoResp?, Meta?, (Add | Replace | Delete | Copy | Atomic | Map | Sequence | Sync | Get | Exec | Alert)+)>
+<!ELEMENT Copy (CmdID, NoResp?, Cred?, Meta?, Item+)>
+<!ELEMENT Delete (CmdID, NoResp?, Archive?, SftDel?, Cred?, Meta?, Item+)>
+<!ELEMENT Exec (CmdID, NoResp?, Cred?, Meta?, Item)>
+<!ELEMENT Get (CmdID, NoResp?, Lang?, Cred?, Meta?, Item+)>
+<!ELEMENT Map (CmdID, Target, Source, Cred?, Meta?, MapItem+)>
+<!ELEMENT MapItem (Target, Source)>
+<!ELEMENT Put (CmdID, NoResp?, Lang?, Cred?, Meta?, Item+)>
+<!ELEMENT Replace (CmdID, NoResp?, Cred?, Meta?, Item+)>
+<!ELEMENT Results (CmdID, MsgRef?, CmdRef, Meta?, TargetRef?, SourceRef?, Item+)>
+<!ELEMENT Search (CmdID, NoResp?, NoResults?, Cred?, Target?, Source+, Lang?, Meta, Data)>
+<!ELEMENT Sequence (CmdID, NoResp?, Meta?, (Add | Replace | Delete | Copy | Atomic | Map | Sync | Get | Alert | Exec)+)>
+<!ELEMENT Status (CmdID, MsgRef, CmdRef, Cmd, TargetRef*, SourceRef*, Cred?, Chal?, Data, Item*)>
+<!ELEMENT Sync (CmdID, NoResp?, Cred?, Target?, Source?, Meta?, NumberOfChanges?, (Add | Atomic | Copy | Delete | Replace | Sequence)*)>
+<!ELEMENT Data (#PCDATA?, DevInf?)>
+<!ELEMENT Meta (Anchor?, Type?, Format?, Type?, Size?, Version?, NextNonce?, MaxMsgSize?, MaxObjSize?, Mark?)>
+<!ELEMENT Anchor (Last?, Next)>
+<!ELEMENT Last (#PCDATA?)>
+<!ELEMENT Version (#PCDATA)>
+<!ELEMENT Size (#PCDATA)>
+<!ELEMENT Type (#PCDATA)>
+<!ELEMENT NextNonce (#PCDATA)>
+<!ELEMENT MaxMsgSize (#PCDATA)>
+<!ELEMENT MaxObjSize (#PCDATA)>
+<!ELEMENT Mark (#PCDATA)>
+<!ELEMENT Format (#PCDATA)>
+<!ELEMENT Next (#PCDATA)>
+<!ELEMENT DevInf (VerDTD,Man,Mod,OEM?,FwV?,SwV?,HwV?,DevID,DevTyp,UTC?,SupportLargeObjs?,SupportNumberOfChanges?,DataStore+,Ext*)>
+<!ELEMENT Man (#PCDATA?)>
+<!ELEMENT Mod (#PCDATA?)>
+<!ELEMENT OEM (#PCDATA?)>
+<!ELEMENT FwV (#PCDATA?)>
+<!ELEMENT SwV (#PCDATA?)>
+<!ELEMENT HwV (#PCDATA?)>
+<!ELEMENT DevID (#PCDATA?)>
+<!ELEMENT DevTyp (#PCDATA?)>
+<!ELEMENT UTC EMPTY>
+<!ELEMENT SupportLargeObjs EMPTY>
+<!ELEMENT SupportNumberOfChanges EMPTY>
+<!ELEMENT DataStore (SourceRef,DisplayName?,MaxGUIDSize?,Rx-Pref,Rx*,Tx-Pref,Tx*,CTCap*,DSMem?,SupportHierarchicalSync?,SyncCap,Filter-Rx*,FilterCap*)>
+<!ELEMENT SourceRef (#PCDATA)>
+<!ELEMENT DisplayName (#PCDATA)>
+<!ELEMENT MaxGUIDSize (#PCDATA?)>
+<!ELEMENT Rx-Pref (CTType, VerCT)>
+<!ELEMENT Rx (CTType, VerCT)>
+<!ELEMENT Tx-Pref (CTType, VerCT)>
+<!ELEMENT Tx (CTType, VerCT)>
+<!ELEMENT Filter-Rx (CTType, VerCT)>
+<!ELEMENT FilterCap (CTType, VerCT, FilterKeyword*,PropName*)>
+<!ELEMENT FilterKeyword (#PCDATA?)>
+<!ELEMENT CTCap (CTType, VerCT, FieldLevel?, Property+)>
+<!ELEMENT CTType (#PCDATA?)>
+<!ELEMENT VerCT (#PCDATA?)>
+<!ELEMENT FieldLevel EMPTY>
+<!ELEMENT Property (PropName, DataType?, MaxOccur?, MaxSize?, NoTruncate?, ValEnum*, DisplayName?, PropParam*)>
+<!ELEMENT PropName (#PCDATA?)>
+<!ELEMENT DataType (#PCDATA?)>
+<!ELEMENT MaxOccur (#PCDATA?)>
+<!ELEMENT MaxSize (#PCDATA?)>
+<!ELEMENT NoTruncate EMPTY>
+<!ELEMENT ValEnum (#PCDATA?)>
+<!ELEMENT PropParam (ParamName, DataType?, ValEnum*, DisplayName?)>
+<!ELEMENT ParamName (#PCDATA?)>
+<!ELEMENT DSMem (SharedMem?, MaxMem?, MaxID?)>
+<!ELEMENT SupportHierarchicalSync EMPTY>
+<!ELEMENT SyncCap (SyncType+)>
+<!ELEMENT SyncType (#PCDATA)>
+<!ELEMENT Ext (XNam, XVal*)>
+<!ELEMENT XNam (#PCDATA)>
+<!ELEMENT XVal (#PCDATA)>
+<!ELEMENT MaxMem (#PCDATA)>
+<!ELEMENT MaxID (#PCDATA)>
+<!ELEMENT SharedMem EMPTY>
+<!ELEMENT VerDTD (#PCDATA)>
+]><?xml version="1.0" encoding="UTF-8"?>
+<SyncML>
+<SyncHdr><VerDTD>1.2</VerDTD>
+<VerProto>SyncML/1.2</VerProto>
+<SessionID>1286632592</SessionID>
+<MsgID>2</MsgID>
+<Target><LocURI>http://synrc.com:2500</LocURI>
+</Target>
+<Source><LocURI>iph-7w0sWNjprMdh2Z8dXjBieg==</LocURI>
+</Source>
+</SyncHdr>
+<SyncBody>
+	<Status>
+		<CmdID>3</CmdID>
+		<MsgRef>0</MsgRef>
+		<CmdRef>0</CmdRef>
+		<Cmd>SyncHdr</Cmd>
+		<TargetRef>http://synrc.com:2500</TargetRef>
+		<SourceRef>iph-7w0sWNjprMdh2Z8dXjBieg==</SourceRef>
+		<Data>200</Data>
+	</Status>
+	<Sync>
+	<CmdID>4</CmdID>
+	<Target><LocURI>ca</LocURI></Target>
+	<Source><LocURI>addressbook</LocURI></Source>
+	<Add>
+		<CmdID>5</CmdID>
+		<Meta><Type xmlns="syncml:metinf">text/x-vcard</Type></Meta>
+		<Item>
+			<Source><LocURI>1482</LocURI></Source>
+			<Data><![CDATA[BEGIN:VCARD
+VERSION:2.1
+N;ENCODING=QUOTED-PRINTABLE;CHARSET=UTF-8:=D0=9F=D1=8F=D1=82=D0=BA=D0=B8=D0=BD=D0=B0;=D0=AE=D0=BB=D1=8F;;;
+BDAY:
+NOTE;ENCODING=QUOTED-PRINTABLE;CHARSET=UTF-8:=D0=9F=D0=BE=D0=BC=D0=B5=D1=82=D0=BA=D0=B0: =D0=9E=D0=B1=D1=8B=D1=87=D0=BD=D0=B0=D1=8F=0A
+TEL;VOICE;WORK:
+TEL;WORK;FAX:
+TEL;WORK;PREF:
+TEL;VOICE;HOME:
+TEL;HOME;FAX:
+TEL;FAX:
+TEL;CAR:
+TEL;CELL:+380961276855
+TEL;VOICE:
+TEL;PAGER:
+TEL;PREF;VOICE:
+URL;WORK:
+URL;HOME:
+URL:
+EMAIL;INTERNET:
+EMAIL;INTERNET;HOME:
+EMAIL;INTERNET;WORK:
+TITLE:
+NICKNAME:
+ORG:;;
+ADR;HOME:;;;;;;
+ADR:;;;;;;
+ADR;WORK:;;;;;;
+PHOTO:
+END:VCARD
+]]>
+			</Data>
+		</Item>
+	</Add>
+</Sync>
+</SyncBody>
+</SyncML>

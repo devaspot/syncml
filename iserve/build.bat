@@ -1,0 +1,1 @@
+erlc +debug_info -o ../ebin src/iserve.erl src/iserve_app.erl src/iserve_server.erl src/iserve_socket.erl src/iserve_sup.erl 
