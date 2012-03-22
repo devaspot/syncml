@@ -70,7 +70,7 @@ sync_alert(Children) ->
 	io:format("<p>CmdId: ~p</p>",[CmdId]),
 	AlertData = parse_data(Children),
 	io:format("<p>Data: ~p</p>",[AlertData]),
-	Items = parse_items(Children),
+	Items = parse_items(Children,[]),
 	io:format("<p>Items: ~p</p>",[xml_print:pp(Items)]),
 	{CmdId,AlertData,Items}.
 
@@ -86,7 +86,7 @@ parse_items([[{"ITEM",Attr,Children}]|T],Out) -> parse_items(T,Out++[parse_item(
 parse_items([H|T],Out) -> parse_items(T);
 parse_items([],Out) -> Out.
 
-parse_item(Item)
+parse_item(Item) ->
 	ItemSource = parse_item_children("SOURCE",Item),
 	io:format("<p>Item Source: ~p</p>",[ItemSource]),
 	ItemTarget = parse_item_children("TARGET",Item),

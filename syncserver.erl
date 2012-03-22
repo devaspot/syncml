@@ -5,7 +5,7 @@
 -include("iserve/include/iserve.hrl").
 
 -define(PORT, 2500).
--define(BIND, {212,9,249,42}).
+-define(BIND, {0,0,0,0}).
 
 start() ->
     application:start(ucs),
