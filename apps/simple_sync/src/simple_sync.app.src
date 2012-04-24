@@ -1,0 +1,13 @@
+{application, simple_sync,
+ [
+  {description, "syncml server"},
+  {vsn, "0.1.0"},
+  {registered, [simple_sync_sup]},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  inets,
+                  xmerl
+                 ]},
+  {mod, { simple_sync_app, []}},
+  {env, []}]}.
