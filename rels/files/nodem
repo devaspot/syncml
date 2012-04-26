@@ -85,11 +85,11 @@ case "$1" in
                 ;;
         esac
         $NODETOOL stop
-        ES=$?
-        if [ "$ES" -ne 0 ]; then
-            exit $ES
-        fi
-        while `kill -0 $PID 2>/dev/null`;
+#        ES=$?
+#        if [ "$ES" -ne 0 ]; then
+#            exit $ES
+#        fi
+        while `kill -9 $PID 2>/dev/null`;
         do
             sleep 1
         done
