@@ -1,0 +1,35 @@
+<!--
+Client device initiate synchronization of Contacts, Calendar datastore. 
+Due to maximum message size, client isable to send all contacts modifications,
+in this example 10 contacts items, but only 5 of 10 calendar modifications.
+-->
+<SyncML xmlns='SYNCML:SYNCML1.2'>
+    <SyncHdr>
+	<VerDTD>1.2</VerDTD>
+	<VerProto>SyncML/1.2</VerProto>
+	<SessionID>1</SessionID>
+	<MsgID>2</MsgID>
+	<Target>
+	    <LocURI>http://syncserver.com/servlets/SyncML</LocURI>
+	</Target>
+	<Source>
+	    <LocURI>IMEI:004400061769830</LocURI></Source>
+    </SyncHdr>
+    <SyncBody>
+	<Status>
+	    <!-- Statuses for SyncHdr and so on -->
+	</Status>
+	<Sync>
+	    <CmdID>4</CmdID>
+	    <Target><LocURI>./Contact/Contacts</LocURI></Target>
+	    <Source><LocURI>./C\System\Data\Contacts.cdb</LocURI></Source>
+	    <!--10/10 Contact items-->
+	</Sync>
+	<Sync>
+	    <CmdID>15</CmdID>
+	    <Target><LocURI>./Calendar/Calendars</LocURI></Target>
+	    <Source><LocURI>./C\System\Data\Calendars.cdb</LocURI></Source>
+	    <!-- 5/10 Calendar items-->
+	</Sync>
+    </SyncBody>
+</SyncML>

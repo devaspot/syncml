@@ -7,6 +7,8 @@ start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-    Srv = {simple_sync_server, {simple_sync_server, start_link, []}, permanent, 2000, worker, [simple_sync_server]},
-    {ok, { {one_for_one, 0, 1}, [Srv]} }.
+    SyncAgentSup = {sync_agent_sup, {sync_agent_sup, start_link, []},
+    permanent, 2000, supervisor, [sync_agent]},
+
+    {ok, {{one_for_one, 4, 3600}, [SyncAgentSup]}}.
 

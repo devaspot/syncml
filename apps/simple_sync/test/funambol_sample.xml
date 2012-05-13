@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SyncML>
+<SyncHdr>
+    <VerDTD>1.2</VerDTD>
+    <VerProto>SyncML/1.2</VerProto>
+    <SessionID>1333380097</SessionID>
+    <MsgID>1</MsgID>
+    <Target>
+	<LocURI>http://UKR-029-RMA.ads.deltek.com:8881</LocURI>
+    </Target>
+    <Source>
+	<LocURI>fol-VUtSLTAyOS1STUE6QW5kcmlpWmFkb3JvemhuaWk=</LocURI>
+    </Source>
+    <Cred>
+        <Meta>
+	    <Format xmlns="syncml:metinf">b64</Format>
+	    <Type xmlns="syncml:metinf">syncml:auth-basic</Type>
+	</Meta>
+	<Data>dGVzdDp0ZXN0</Data>
+    </Cred>
+    <Meta>
+	<MaxMsgSize xmlns="syncml:metinf">125000</MaxMsgSize>
+    </Meta>
+</SyncHdr>
+
+<SyncBody>
+    <Alert>
+	<CmdID>1</CmdID>
+	<Data>201</Data>
+	<Item>
+	    <Target>
+		<LocURI>card</LocURI>
+	    </Target>
+	    <Source>
+		<LocURI>contact</LocURI>
+	    </Source>
+	    <Meta>
+		<Anchor xmlns="syncml:metinf">
+		    <Last>0</Last>
+		    <Next>1333380097</Next>
+		</Anchor>
+	    </Meta>
+	</Item>
+    </Alert>
+
+    <Get>
+	<CmdID>2</CmdID>
+	<Meta>
+	    <Type xmlns="syncml:metinf">application/vnd.syncml-devinf+xml</Type>
+	</Meta>
+	<Item>
+	    <Target>
+		<LocURI>./devinf12</LocURI>
+	    </Target>
+	</Item>
+    </Get>
+
+    <Put>
+	<CmdID>3</CmdID>
+	<Meta>
+	    <Type xmlns="syncml:metinf">application/vnd.syncml-devinf+xml</Type>
+	</Meta>
+	<Item>
+	<Source>
+	    <LocURI>./devinf12</LocURI>
+	</Source>
+	<Data>
+	    <DevInf xmlns="syncml:devinf">
+		<VerDTD>1.2</VerDTD>
+		<Man>Funambol</Man>
+		<Mod>Funambol Windows Sync Client</Mod>
+		<SwV>10.1.6</SwV>
+		<DevID>fol-VUtSLTAyOS1STUE6QW5kcmlpWmFkb3JvemhuaWk=</DevID>
+		<DevTyp>workstation</DevTyp>
+		<UTC/>
+		<SupportLargeObjs/>
+		<SupportNumberOfChanges/>
+		<DataStore>
+		    <SourceRef>appointment</SourceRef>
+		    <Rx-Pref>
+			<CTType>text/x-vcalendar</CTType>
+			<VerCT>1.0</VerCT>
+		    </Rx-Pref>
+		    <Rx>
+			<CTType>text/x-vcalendar</CTType>
+			<VerCT>1.0</VerCT>
+		    </Rx>
+		    <Rx>
+			<CTType>text/x-s4j-sife</CTType>
+			<VerCT>1.0</VerCT>
+		    </Rx>
+		    <Tx-Pref>
+			<CTType>text/x-vcalendar</CTType>
+			<VerCT>1.0</VerCT>
+		    </Tx-Pref>
+		    <Tx>
+			<CTType>text/x-vcalendar</CTType>
+			<VerCT>1.0</VerCT>
+		    </Tx>
+		    <Tx>
+			<CTType>text/x-s4j-sife</CTType>
+			<VerCT>1.0</VerCT>
+		    </Tx>
+		    <CTCap>
+			<CTType>text/x-vcalendar</CTType>
+			<VerCT>1.0</VerCT>
+			<Property>
+				<PropName>BEGIN</PropName>
+				<ValEnum>VCALENDAR</ValEnum>
+				<ValEnum>VEVENT</ValEnum>
+			</Property>
+			<Property>
+				<PropName>END</PropName>
+				<ValEnum>VCALENDAR</ValEnum>
+				<ValEnum>VEVENT</ValEnum>
+			</Property>
+			<Property>
+				<PropName>VERSION</PropName>
+				<ValEnum>1.0</ValEnum>
+			</Property>
+			<Property>
+				<PropName>CLASS</PropName>
+				<ValEnum>PUBLIC</ValEnum>
+				<ValEnum>PRIVATE</ValEnum>
+				<ValEnum>CONFIDENTIAL</ValEnum>
+			</Property>
+			<Property><PropName>X-FUNAMBOL-ALLDAY</PropName></Property>
+			<Property><PropName>DESCRIPTION</PropName></Property>
+			<Property><PropName>X-MICROSOFT-CDO-BUSYSTATUS</PropName></Property>
+			<Property><PropName>CATEGORIES</PropName></Property>
+			<Property><PropName>DTEND</PropName></Property>
+			<Property><PropName>LOCATION</PropName></Property>
+			<Property><PropName>STATUS</PropName></Property>
+			<Property><PropName>SUMMARY</PropName></Property>
+			<Property><PropName>X-FUNAMBOL-BILLINGINFO</PropName></Property>
+			<Property><PropName>X-FUNAMBOL-COMPANIES</PropName>	</Property>
+			<Property><PropName>X-FUNAMBOL-MILEAGE</PropName></Property>
+			<Property><PropName>X-FUNAMBOL-NOAGING</PropName></Property>
+			<Property><PropName>X-FUNAMBOL-FOLDER</PropName></Property>
+			<Property><PropName>X-MICROSOFT-CDO-REPLYTIME</PropName></Property>
+			<Property><PropName>AALARM</PropName></Property>
+			<Property><PropName>PRIORITY</PropName></Property>
+			<Property><PropName>DTSTART</PropName></Property>
+			<Property><PropName>RRULE</PropName></Property>
+			<Property><PropName>EXDATE</PropName></Property>
+			<Property><PropName>RDATE</PropName></Property>
+			<Property><PropName>TZ</PropName></Property>
+			<Property><PropName>DAYLIGHT</PropName></Property>
+		    </CTCap>
+		    <SyncCap>
+			<SyncType>1</SyncType>
+			<SyncType>4</SyncType>
+			<SyncType>6</SyncType>
+			<SyncType>2</SyncType>
+		    </SyncCap>
+		</DataStore>
+		<DataStore>
+		    <SourceRef>contact</SourceRef>
+		    <Rx-Pref>
+			<CTType>text/x-vcard</CTType>
+			<VerCT>2.1</VerCT>
+		    </Rx-Pref>
+		    <Rx>
+			<CTType>text/x-vcard</CTType>
+			<VerCT>2.1</VerCT>
+		    </Rx>
+		    <Rx>
+			<CTType>text/x-s4j-sifc</CTType>
+			<VerCT>1.0</VerCT>
+		    </Rx>
+		    <Tx-Pref>
+			<CTType>text/x-vcard</CTType>
+			<VerCT>2.1</VerCT>
+		    </Tx-Pref>
+		    <Tx>
+			<CTType>text/x-vcard</CTType>
+			<VerCT>2.1</VerCT>
+		    </Tx>
+		    <Tx>
+			<CTType>text/x-s4j-sifc</CTType>
+			<VerCT>1.0</VerCT>
+		    </Tx>
+		    <CTCap>
+			<CTType>text/x-vcard</CTType>
+			<VerCT>2.1</VerCT>
+			<Property>
+			    <PropName>BEGIN</PropName>
+			    <ValEnum>VCARD</ValEnum>
+			</Property>
+			<Property>
+			    <PropName>END</PropName>
+			    <ValEnum>VCARD</ValEnum>
+			</Property>
+			<Property>
+			    <PropName>VERSION</PropName>
+			    <ValEnum>2.1</ValEnum>
+			</Property>
+			<Property>
+			    <PropName>CLASS</PropName>
+			    <ValEnum>PUBLIC</ValEnum>
+			    <ValEnum>PRIVATE</ValEnum>
+			    <ValEnum>CONFIDENTIAL</ValEnum>
+			</Property>
+			<Property>
+			    <PropName>X-ANNIVERSARY</PropName>
+			</Property>
+<Property><PropName>BDAY</PropName>
+</Property>
+<Property><PropName>NOTE</PropName>
+</Property>
+<Property><PropName>FN</PropName>
+</Property>
+<Property><PropName>TEL</PropName>
+<PropParam><ParamName>TYPE</ParamName>
+<ValEnum>VOICE,WORK</ValEnum>
+<ValEnum>WORK,FAX</ValEnum>
+<ValEnum>CAR,VOICE</ValEnum>
+<ValEnum>WORK,PREF</ValEnum>
+<ValEnum>HOME,FAX</ValEnum>
+<ValEnum>VOICE,HOME</ValEnum>
+<ValEnum>PREF,VOICE</ValEnum>
+<ValEnum>CELL</ValEnum>
+<ValEnum>PAGER</ValEnum>
+<ValEnum>FAX</ValEnum>
+<ValEnum>VOICE</ValEnum>
+<ValEnum>X-FUNAMBOL-TELEX</ValEnum>
+<ValEnum>X-FUNAMBOL-RADIO</ValEnum>
+<ValEnum>X-FUNAMBOL-CALLBACK</ValEnum>
+</PropParam>
+</Property>
+<Property><PropName>CATEGORIES</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-CHILDREN</PropName>
+</Property>
+<Property><PropName>ORG</PropName>
+</Property>
+<Property><PropName>ROLE</PropName>
+</Property>
+<Property><PropName>ADR</PropName>
+<PropParam><ParamName>TYPE</ParamName>
+<ValEnum>HOME</ValEnum>
+<ValEnum>WORK</ValEnum>
+</PropParam>
+</Property>
+<Property><PropName>URL</PropName>
+<PropParam><ParamName>TYPE</ParamName>
+<ValEnum>HOME</ValEnum>
+</PropParam>
+</Property>
+<Property><PropName>EMAIL</PropName>
+<PropParam><ParamName>TYPE</ParamName>
+<ValEnum>INTERNET</ValEnum>
+<ValEnum>INTERNET,HOME</ValEnum>
+<ValEnum>INTERNET,WORK</ValEnum>
+<ValEnum>INTERNET,HOME,X-FUNAMBOL-INSTANTMESSENGER</ValEnum>
+</PropParam>
+</Property>
+<Property><PropName>TITLE</PropName>
+</Property>
+<Property><PropName>N</PropName>
+</Property>
+<Property><PropName>X-MANAGER</PropName>
+</Property>
+<Property><PropName>NICKNAME</PropName>
+</Property>
+<Property><PropName>PHOTO</PropName>
+</Property>
+<Property><PropName>PRIORITY</PropName>
+</Property>
+<Property><PropName>X-SPOUSE</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-BILLINGINFO</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-COMPANIES</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-FOLDER</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-GENDER</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-HOBBIES</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-INITIALS</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-LANGUAGES</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-MILEAGE</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-SUBJECT</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-ORGANIZATIONALID</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-YOMICOMPANYNAME</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-YOMIFIRSTNAME</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-YOMILASTNAME</PropName>
+</Property>
+</CTCap>
+<SyncCap><SyncType>1</SyncType>
+<SyncType>4</SyncType>
+<SyncType>6</SyncType>
+<SyncType>2</SyncType>
+</SyncCap>
+</DataStore>
+	<DataStore><SourceRef>files</SourceRef>
+		<Rx-Pref><CTType>application/*</CTType>
+		<VerCT></VerCT>
+		</Rx-Pref>
+		<Rx><CTType>application/*</CTType>
+		<VerCT></VerCT>
+		</Rx>
+		<Tx-Pref><CTType>application/*</CTType>
+		<VerCT></VerCT>
+		</Tx-Pref>
+		<Tx><CTType>application/*</CTType>
+		<VerCT></VerCT>
+		</Tx>
+		<SyncCap><SyncType>1</SyncType>
+		</SyncCap>
+	</DataStore>
+<DataStore><SourceRef>note</SourceRef>
+<Rx-Pref><CTType>text/x-s4j-sifn</CTType>
+<VerCT>1.0</VerCT>
+</Rx-Pref>
+<Rx><CTType>text/x-s4j-sifn</CTType>
+<VerCT>1.0</VerCT>
+</Rx>
+<Rx><CTType>text/x-vnote</CTType>
+<VerCT>1.1</VerCT>
+</Rx>
+<Tx-Pref><CTType>text/x-s4j-sifn</CTType>
+<VerCT>1.0</VerCT>
+</Tx-Pref>
+<Tx><CTType>text/x-s4j-sifn</CTType>
+<VerCT>1.0</VerCT>
+</Tx>
+<Tx><CTType>text/x-vnote</CTType>
+<VerCT>1.1</VerCT>
+</Tx>
+<CTCap><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+<Property><PropName>Subject</PropName>
+</Property>
+<Property><PropName>Body</PropName>
+</Property>
+</CTCap>
+<CTCap><CTType>text/x-vnote</CTType>
+<VerCT>1.1</VerCT>
+<Property><PropName>BEGIN</PropName>
+<ValEnum>VNOTE</ValEnum>
+</Property>
+<Property><PropName>END</PropName>
+<ValEnum>VNOTE</ValEnum>
+</Property>
+<Property><PropName>VERSION</PropName>
+<ValEnum>1.1</ValEnum>
+</Property>
+<Property><PropName>SUBJECT</PropName>
+</Property>
+<Property><PropName>BODY</PropName>
+</Property>
+</CTCap>
+<SyncCap><SyncType>1</SyncType>
+<SyncType>4</SyncType>
+<SyncType>6</SyncType>
+<SyncType>2</SyncType>
+</SyncCap>
+</DataStore>
+<DataStore><SourceRef>picture</SourceRef>
+<Rx-Pref><CTType>image/*</CTType>
+<VerCT></VerCT>
+</Rx-Pref>
+<Rx><CTType>application/*</CTType>
+<VerCT></VerCT>
+</Rx>
+	<Tx-Pref><CTType>image/*</CTType>
+		<VerCT></VerCT>
+	</Tx-Pref>
+	<Tx><CTType>application/*</CTType>
+		<VerCT></VerCT>
+	</Tx>
+	<SyncCap>
+		<SyncType>1</SyncType>
+		<SyncType>3</SyncType>
+		<!--SyncType>5</SyncType-->
+	</SyncCap>
+</DataStore>
+<DataStore><SourceRef>task</SourceRef>
+<Rx-Pref><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+</Rx-Pref>
+<Rx><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+</Rx>
+<Rx><CTType>text/x-s4j-sift</CTType>
+<VerCT>1.0</VerCT>
+</Rx>
+<Tx-Pref><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+</Tx-Pref>
+<Tx><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+</Tx>
+<Tx><CTType>text/x-s4j-sift</CTType>
+<VerCT>1.0</VerCT>
+</Tx>
+<CTCap><CTType>text/x-vcalendar</CTType>
+<VerCT>1.0</VerCT>
+<Property><PropName>BEGIN</PropName>
+<ValEnum>VCALENDAR</ValEnum>
+<ValEnum>VTODO</ValEnum>
+</Property>
+<Property><PropName>END</PropName>
+<ValEnum>VTODO</ValEnum>
+<ValEnum>VCALENDAR</ValEnum>
+</Property>
+<Property><PropName>VERSION</PropName>
+<ValEnum>1.0</ValEnum>
+</Property>
+<Property><PropName>CLASS</PropName>
+<ValEnum>PUBLIC</ValEnum>
+<ValEnum>PRIVATE</ValEnum>
+<ValEnum>CONFIDENTIAL</ValEnum>
+</Property>
+<Property><PropName>X-FUNAMBOL-ALLDAY</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-FOLDER</PropName>
+</Property>
+<Property><PropName>DESCRIPTION</PropName>
+</Property>
+<Property><PropName>CATEGORIES</PropName>
+</Property>
+<Property><PropName>STATUS</PropName>
+</Property>
+<Property><PropName>COMPLETED</PropName>
+</Property>
+<Property><PropName>DUE</PropName>
+</Property>
+<Property><PropName>PRIORITY</PropName>
+</Property>
+<Property><PropName>AALARM</PropName>
+</Property>
+<Property><PropName>CLASS</PropName>
+</Property>
+<Property><PropName>DTSTART</PropName>
+</Property>
+<Property><PropName>SUMMARY</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-TEAMTASK</PropName>
+</Property>
+<Property><PropName>RRULE</PropName>
+</Property>
+<Property><PropName>PERCENT-COMPLETE</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-ACTUALWORK</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-BILLINGINFO</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-COMPANIES</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-MILEAGE</PropName>
+</Property>
+<Property><PropName>X-FUNAMBOL-TOTALWORK</PropName>
+</Property>
+</CTCap>
+				<SyncCap>
+					<SyncType>1</SyncType>
+					<SyncType>4</SyncType>
+					<SyncType>6</SyncType>
+					<SyncType>2</SyncType>
+				</SyncCap>
+			</DataStore>
+			<DataStore>
+				<SourceRef>video</SourceRef>
+				<Rx-Pref>
+					<CTType>video/*</CTType>
+					<VerCT></VerCT>
+				</Rx-Pref>
+				<Rx><CTType>application/*</CTType>
+					<VerCT></VerCT>
+				</Rx>
+				<Tx-Pref><CTType>video/*</CTType>
+					<VerCT></VerCT>
+				</Tx-Pref>
+				<Tx>
+					<CTType>application/*</CTType>
+					<VerCT></VerCT>
+				</Tx>
+				<SyncCap>
+					<SyncType>1</SyncType>
+				<SyncType>3</SyncType>
+				</SyncCap>
+			</DataStore>
+					</DevInf>
+				</Data>
+			</Item>
+		</Put>
+	<Final/>
+</SyncBody>
+</SyncML>

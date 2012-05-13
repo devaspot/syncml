@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Status>
+    <CmdID>1</CmdID>
+    <MsgRef>1</MsgRef>
+    <CmdRef>2</CmdRef>
+    <Cmd>Replace</Cmd>
+    <SourceRef>1212</SourceRef>
+    <Data>208</Data><!-- Conflict, originator wins -->
+</Status>
