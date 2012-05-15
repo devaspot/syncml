@@ -1,5 +1,5 @@
 -module(simple_sync).
--export([package/1]).
+-export([message/1]).
 
-package(Package)->
-    sync_agent:package(Package).
+message(Msg)->
+    sync_agent:message(Msg).

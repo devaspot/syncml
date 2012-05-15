@@ -11,7 +11,7 @@ do(Req) ->
         {[X|Acc], S}
     end,
     {XML, _Rest} = xmerl_scan:string(Req#mod.entity_body, [{space, normalize}, {acc_fun, Acc}]),
-    Body = xmerl:export_simple([simple_sync:package(XML)], xmerl_xml),
+    Body = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
     %io:format("Responce: ~p~n", [Body]),
     {proceed, [{response, {response, [{content_type, "text/xml"}], Body}}]}.
 

@@ -6,8 +6,8 @@
 start_link()->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-start_child(Packet)->
-    supervisor:start_child(?MODULE, [Packet]).
+start_child(Msg)->
+    supervisor:start_child(?MODULE, [Msg]).
 
 init([])->
     SyncAgent = {sync_adapter, {sync_agent, start_link, []},
