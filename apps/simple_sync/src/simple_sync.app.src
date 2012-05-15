@@ -6,9 +6,11 @@
   {applications, [
                   kernel,
                   stdlib,
+                  sasl,
                   inets,
                   mnesia,
-                  xmerl
+                  xmerl,
+                  wbxml
                  ]},
   {mod, { simple_sync_app, []}},
   {env, []}]}.

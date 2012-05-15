@@ -1,0 +1,14 @@
+{application, wbxml,
+ [
+  {description, "wbxml encoder"},
+  {vsn, "0.1.0"},
+  {registered, [wbxml_sup]},
+  {applications,
+   [
+      kernel,
+      stdlib,
+      sasl,
+      xmerl
+   ]},
+  {mod, {wbxml_app, []}},
+  {env, []}]}.
