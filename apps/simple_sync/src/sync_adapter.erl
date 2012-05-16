@@ -27,8 +27,8 @@ do(Req) ->
 		{[X|Acc], S}
 	end,
 	{XML, _Rest} = xmerl_scan:string(Body, [{space, normalize}, {acc_fun, Acc}]),
-	Body = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
-	{proceed, [{response, {response, [{content_type, Val}], Body}}]};
+	ResponseBody = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
+	{proceed, [{response, {response, [{content_type, Val}], ResponseBody}}]};
     false ->
 	done
 	%return some error
