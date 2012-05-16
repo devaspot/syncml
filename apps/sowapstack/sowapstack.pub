@@ -1,0 +1,18 @@
+{name, "sowapstack"}.
+{vsn, {0,9}}.
+{summary, "WAP stacks"}.
+{author, "Johan Blom", "jb@cellpt.com", "20010521"}.
+{keywords, ["wap","unicode",]}.
+{needs, [{compiler, "3.0"}]}.
+{abstract, 
+ "Implements the WDP/WTP/WSP layers in a WAP stack for IP v4 bearers. "
+ "Both client and server stacks for connection-less and connection oriented "
+ "WSP are supported. "
+ "In combination with sowaputils this includes everything needed for a "
+ "simple WAP Gateway and WAP Client (no rendering)."
+ "Require ucs-0.2 to work properly.}.
+
+
+
+ 
+ 

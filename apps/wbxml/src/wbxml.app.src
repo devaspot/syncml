@@ -8,7 +8,9 @@
       kernel,
       stdlib,
       sasl,
-      xmerl
+      xmerl,
+      ucs,
+      sowapstack
    ]},
   {mod, {wbxml_app, []}},
   {env, []}]}.

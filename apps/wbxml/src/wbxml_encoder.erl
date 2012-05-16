@@ -278,20 +278,20 @@ guess_charset(C) ->
 
 %%% ============================================================================
 decode(Content) ->
-    {Content1,_WBXMLVers}=decode_wbxml_version(Content),
-    _BinWBXMLVers=get_bin(Content,Content1),
-    %io:format("WBXMLVersion: ~p from ~p~n",[WBXMLVers,BinWBXMLVers]),
+    {Content1,WBXMLVers}=decode_wbxml_version(Content),
+    BinWBXMLVers=get_bin(Content,Content1),
+    io:format("WBXMLVersion: ~p from ~p~n",[WBXMLVers,BinWBXMLVers]),
     {Content2,PIcode}=decode_public_identifier(Content1),
-    _BinPIcode=get_bin(Content1,Content2),
-    %io:format("PICode: ~p from ~p~n",[PIcode,BinPIcode]),
+    BinPIcode=get_bin(Content1,Content2),
+    io:format("PICode: ~p from ~p~n",[PIcode,BinPIcode]),
     {Content3,Charset}=decode_charset(Content2),
-    _BinCharset=get_bin(Content2,Content3),
-    %io:format("Charset: ~p from ~p~n",[Charset,BinCharset]),
+    BinCharset=get_bin(Content2,Content3),
+    io:format("Charset: ~p from ~p~n",[Charset,BinCharset]),
     {Content4,StrTbl}=decode_stringtable(Content3),
-    _BinStrTbl=get_bin(Content3,Content4),
-    %io:format("StringTable: ~p from ~p~n",[StrTbl,BinStrTbl]),
+    BinStrTbl=get_bin(Content3,Content4),
+    io:format("StringTable: ~p from ~p~n",[StrTbl,BinStrTbl]),
     Module=decode_cb_module(PIcode,StrTbl),
-    %io:format("CallbackModule: ~w~n",[Module]),
+    io:format("CallbackModule: ~w~n",[Module]),
     case catch decode_tokens(Content4,StrTbl,Charset,Module) of
     Body when list(Body) ->
         _PI=decode_PI(PIcode,StrTbl),
@@ -377,8 +377,8 @@ encode_stringtable(StrTbl,Charset) ->
 
 decode_stringtable(Content) ->
     {C1,Len}=unpack_uintvar(Content),
-    _BinLen=get_bin(Content,C1),
-    %io:format("StrTbl Len: ~w from ~p~n",[Len,BinLen]),
+    BinLen=get_bin(Content,C1),
+    io:format("StrTbl Len: ~w from ~p~n",[Len,BinLen]),
     {lists:nthtail(Len,C1),
      create_erl_stringtable(lists:sublist(C1,Len))}.
 

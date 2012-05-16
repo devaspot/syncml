@@ -1,0 +1,8 @@
+{application,ucs,
+ [{description,"Unicode support"},
+  {vsn,"0.4.0"},
+  {registered,"usc_sup"},
+  {applications, [kernel, stdlib, sasl, xmerl]},
+  {mod, {ucs_app, []}},
+  {env, []}
+ ]}.

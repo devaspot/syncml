@@ -10,7 +10,8 @@
                   inets,
                   mnesia,
                   xmerl,
-                  wbxml
+                  wbxml,
+                  ucs
                  ]},
   {mod, { simple_sync_app, []}},
   {env, []}]}.

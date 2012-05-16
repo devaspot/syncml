@@ -5,15 +5,34 @@
 
 do(Req) ->
     % TODO: Request/response headers, methods etc.
-    Acc = fun(#xmlText{value = " ", pos = P}, Acc, S) ->
-    {Acc, P, S};
-    (X, Acc, S) ->
-        {[X|Acc], S}
-    end,
-    {XML, _Rest} = xmerl_scan:string(Req#mod.entity_body, [{space, normalize}, {acc_fun, Acc}]),
-    Body = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
-    %io:format("Responce: ~p~n", [Body]),
-    {proceed, [{response, {response, [{content_type, "text/xml"}], Body}}]}.
+    % - General
+    % Cache-Control:no-store / private
+    % Transfer-Encoding: chunked
+    % - Request
+    % Accept: mediatype
+    % Accept-Charset:utf-8 or status 406
+    % User-Agent:
+    case lists:keyfind("content-type", 1, Req#mod.parsed_header) of
+    {_Key, Val} ->
+	case Val of
+	"application/vnd.syncml+xml"->
+	    Body = Req#mod.entity_body;
+	"application/vnd.syncml+wbxml"->
+	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
+	    io:format("Encoded xml: ~p~n",  [Body])
+	end,
+	Acc = fun(#xmlText{value = " ", pos = P}, Acc, S) ->
+	    {Acc, P, S};
+	    (X, Acc, S) ->
+		{[X|Acc], S}
+	end,
+	{XML, _Rest} = xmerl_scan:string(Body, [{space, normalize}, {acc_fun, Acc}]),
+	Body = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
+	{proceed, [{response, {response, [{content_type, Val}], Body}}]};
+    false ->
+	done
+	%return some error
+    end.
 
 log(SessionID, Env, _Input) ->
     mod_esi:deliver(SessionID, ["Content-Type:text/html\r\n\r\n" | log(Env)]).
