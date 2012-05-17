@@ -297,8 +297,8 @@ decode(Content) ->
         _PI=decode_PI(PIcode,StrTbl),
         remove_stringtable(StrTbl),
         {ok,Body};
-    _Error ->
-        %?error("ERROR decoding ~p, got ~p",[Content4,Error],decode),
+    Error ->
+        io:format("ERROR decoding ~p, got ~p", [Content4, Error]),
         remove_stringtable(StrTbl),
         {error,cannot_decode}
     end.
@@ -544,22 +544,22 @@ tag_mode(Module,[?WBXML_END|Content],StrTbl,Charset,[Tag|Tagstack],TagPage,Resul
     %io:format("</~s> tail: ~P~n",[Tag,Content,10]),
     tag_mode(Module,Content,StrTbl,Charset,Tagstack,TagPage,Result++"</"++Tag++">");
 tag_mode(Module,[?WBXML_LITERAL_AC|Content],StrTbl,Charset,Tagstack,TagPage,Result) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Tag=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Tag=wbxml_encoder:lookup_index(StrTbl,Index),
     {Content3,Attributes}=attribute_mode(Module,Content2,StrTbl,Charset,true,[]),
     tag_mode(Module,Content3,StrTbl,Charset,[Tag|Tagstack],TagPage,Result++"<"++Tag++" "++Attributes++">");
 tag_mode(Module,[?WBXML_LITERAL_A|Content],StrTbl,Charset,Tagstack,TagPage,Result) ->
-    {_Content2,Index}=wbxml:unpack_uintvar(Content),
-    Tag=wbxml:lookup_index(StrTbl,Index),
+    {_Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Tag=wbxml_encoder:lookup_index(StrTbl,Index),
     {Content3,Attributes}=attribute_mode(Module,Content,StrTbl,Charset,true,[]),
     tag_mode(Module,Content3,StrTbl,Charset,Tagstack,TagPage,Result++"<"++Tag++" "++Attributes++"/>");
 tag_mode(Module,[?WBXML_LITERAL_C|Content],StrTbl,Charset,Tagstack,TagPage,Result) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Tag=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Tag=wbxml_encoder:lookup_index(StrTbl,Index),
     tag_mode(Module,Content2,StrTbl,Charset,[Tag|Tagstack],TagPage,Result++"<"++Tag++">");
 tag_mode(Module,[?WBXML_LITERAL|Content],StrTbl,Charset,Tagstack,TagPage,Result) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Tag=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Tag=wbxml_encoder:lookup_index(StrTbl,Index),
     tag_mode(Module,Content2,StrTbl,Charset,Tagstack,TagPage,Result++"<"++Tag++"/>");
 tag_mode(Module,[Code|Content],StrTbl,Charset,Tagstack,TagPage,Result)
     when 16#00=<Code,Code=<16#04;16#40=<Code,Code=<16#44;
@@ -611,13 +611,13 @@ attribute_mode(_,[],_,_,_,_Result) ->
     {error,premature_end}.
 
 global_wbxml_code(?WBXML_ENTITY,Content,_StrTbl,Charset) ->
-    {Content2,Entity}=wbxml:unpack_uintvar(Content),
+    {Content2,Entity}=wbxml_encoder:unpack_uintvar(Content),
     {Content2,lookup_entity(Entity,Charset)};
 global_wbxml_code(?WBXML_STR_I,Content,_StrTbl,_) ->
     wsp_bytecodes:decode_string(Content);
 global_wbxml_code(?WBXML_STR_T,Content,StrTbl,_) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    {Content2,wbxml:lookup_index(StrTbl,Index)};
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    {Content2,wbxml_encoder:lookup_index(StrTbl,Index)};
 global_wbxml_code(?WBXML_EXT_I_0,Content,_StrTbl,_) ->
     {Content2,Str}=wsp_bytecodes:decode_string(Content),
     {Content2,"$$("++Str++":escape)"};
@@ -628,16 +628,16 @@ global_wbxml_code(?WBXML_EXT_I_2,Content,_StrTbl,_) ->
     {Content2,Str}=wsp_bytecodes:decode_string(Content),
     {Content2,"$$("++Str++")"};
 global_wbxml_code(?WBXML_EXT_T_0,Content,StrTbl,_) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Str=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Str=wbxml_encoder:lookup_index(StrTbl,Index),
     {Content2,"$$("++Str++":escape)"};
 global_wbxml_code(?WBXML_EXT_T_1,Content,StrTbl,_) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Str=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Str=wbxml_encoder:lookup_index(StrTbl,Index),
     {Content2,"$$("++Str++":unesc)"};
 global_wbxml_code(?WBXML_EXT_T_2,Content,StrTbl,_) ->
-    {Content2,Index}=wbxml:unpack_uintvar(Content),
-    Str=wbxml:lookup_index(StrTbl,Index),
+    {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
+    Str=wbxml_encoder:lookup_index(StrTbl,Index),
     {Content2,"$$("++Str++")"};
 global_wbxml_code(?WBXML_SWITCH_PAGE,Content,_StrTbl,_) ->
     [Page|Tail]=Content,
@@ -645,7 +645,7 @@ global_wbxml_code(?WBXML_SWITCH_PAGE,Content,_StrTbl,_) ->
 global_wbxml_code(?WBXML_PI,_Content,_StrTbl,_) ->
     {error,cannot_read_pi};
 global_wbxml_code(?WBXML_OPAQUE,Content,_StrTbl,_) ->
-    {TailContent,OpaqueLength}=wbxml:unpack_uintvar(Content),
+    {TailContent,OpaqueLength}=wbxml_encoder:unpack_uintvar(Content),
     Str = lists:sublist(TailContent,1,OpaqueLength),
     Tail = lists:sublist(TailContent,OpaqueLength+1,length(TailContent)),
     {Tail,Str};

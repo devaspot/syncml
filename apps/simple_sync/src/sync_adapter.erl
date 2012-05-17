@@ -19,14 +19,14 @@ do(Req) ->
 	    Body = Req#mod.entity_body;
 	"application/vnd.syncml+wbxml"->
 	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
-	    io:format("Encoded xml: ~p~n",  [Body])
+	    io:format("Encoded xml: ~s~n",  [Body])
 	end,
 	Acc = fun(#xmlText{value = " ", pos = P}, Acc, S) ->
 	    {Acc, P, S};
 	    (X, Acc, S) ->
 		{[X|Acc], S}
 	end,
-	{XML, _Rest} = xmerl_scan:string(Body, [{space, normalize}, {acc_fun, Acc}]),
+	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
 	ResponseBody = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
 	{proceed, [{response, {response, [{content_type, Val}], ResponseBody}}]};
     false ->
