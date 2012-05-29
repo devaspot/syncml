@@ -182,7 +182,7 @@ decode_headers2([H|C],Page) ->
 	32=<H,H<127 ->
 	    {Input,Key}=wsp_bytecodes:decode_string([H|C]),
 	    case skip_header_val(Input) of
-		{error,Reason} ->
+		{error,_Reason} ->
 		    ?error("Illformed header ~p",[Key],decode_headers2),
 		    decode_headers2([],Page);
 		{ok,A} ->
@@ -191,7 +191,7 @@ decode_headers2([H|C],Page) ->
 	128=<H ->
 	    {Input,Key}=decode_short_integer([H|C]),
 	    case skip_header_val(Input) of
-		{error,Reason} ->
+		{error,_Reason} ->
 		    ?error("Illformed header ~p",[Key],decode_headers2),
 		    decode_headers2([],Page);
 		{ok,A} ->
@@ -239,7 +239,7 @@ pp_headers2(C,?DEFAULT_PAGE) ->
 	    io:format("~p from ~w~n",[Value,Hlist]),
 	    pp_headers2(C2,?DEFAULT_PAGE)
     end;
-pp_headers2([H|C],Page) when 1=<H,H=<31 ->
+pp_headers2([H|C],_Page) when 1=<H,H=<31 ->
     io:format("~nSwapping Header Code Page to ~w~n",[H]),
     pp_headers2(C,H);
 pp_headers2([H|C],Page) when 32=<H,H<127 ->
@@ -249,7 +249,7 @@ pp_headers2([H|C],Page) when 32=<H,H<127 ->
     io:format(" Code:~w~n",
 	      [lists:sublist([H|C],1,length([H|C])-length(Input1))]),
     pp_headers2(Input1,Page);
-pp_headers2([127|C],Page) ->
+pp_headers2([127|C],_Page) ->
     io:format("~nSwapping Header Code Page to ~w~n",[hd(C)]),
     pp_headers2(tl(C),hd(C));
 pp_headers2([H|C],Page) when 128=<H ->
@@ -459,11 +459,11 @@ decode_charset(MIB) ->
 
 
 %% =============================================================================
-encode_field(Val,EV,[{Code,EV2,Val}|Rest]) when EV>=EV2 -> Code;
+encode_field(Val,EV,[{Code,EV2,Val}|_Rest]) when EV>=EV2 -> Code;
 encode_field(Val,EV,[_|Rest]) -> encode_field(Val,EV,Rest);
 encode_field(_,_,[]) -> {ok,undef_field}.
 
-decode_field(Code,[{Code,_,Val}|Rest]) -> Val;
+decode_field(Code,[{Code,_,Val}|_Rest]) -> Val;
 decode_field(Code,[_|Rest]) -> decode_field(Code,Rest);
 decode_field(_,[]) -> {ok,undef_code}.
 
@@ -478,7 +478,7 @@ encode_field2(Val,[{Code,Vallist}|Rest]) ->
 encode_field2(_,[]) ->
     {ok,undef_field}.
 
-decode_field2(Code,[{Code,[Val|_]}|Rest]) ->
+decode_field2(Code,[{Code,[Val|_]}|_Rest]) ->
     Val;
 decode_field2(Code,[_|Rest]) ->
     decode_field2(Code,Rest);
@@ -500,7 +500,7 @@ encode_text_string([H|Val]) when 127<H,H<256 ->
     [127] ++ [H|Val] ++ [0];
 encode_text_string(Val) when list(Val) ->
     Val ++ [0];
-encode_text_string(Val) ->
+encode_text_string(_Val) ->
     throw({error,invalid_text_string}).
 
 decode_text_string([0|Content]) ->
@@ -554,7 +554,7 @@ encode_short_integer(_) ->
 
 decode_short_integer([Int|Rest]) when 127<Int,Int<256 ->
     {Rest,Int-128};
-decode_short_integer(Int) ->
+decode_short_integer(_Int) ->
     throw({error,not_short_integer}).
 
 %% An long integer is coded with a "short-length" followed by a
@@ -803,7 +803,7 @@ encode_parameter3('comment',Right) ->  [16#0c|encode_text_string(Right)];
 encode_parameter3('domain',Right) ->   [16#0d|encode_text_string(Right)];
 encode_parameter3('max-age',Right) ->  [16#0e|encode_integer(Right)];
 encode_parameter3('path',Right) ->     [16#0f|encode_text_string(Right)];
-encode_parameter3('secure',Right) ->   [16#10|encode_no_value()];
+encode_parameter3('secure',_Right) ->   [16#10|encode_no_value()];
 encode_parameter3(_,_) -> {error,no_known_encoding}.
 
 
@@ -834,7 +834,7 @@ decode_parameter_field([H|T]) ->
 	    throw({error,unknown_parameter_field});
 	X when X>=32,X=<127 -> % Text-value
 	    decode_text_val([H|T]);
-	X -> % Integer-value (short or long), ie 1=<X=<30 or 128=<X=<255
+	_X -> % Integer-value (short or long), ie 1=<X=<30 or 128=<X=<255
 	    {C,Int}=decode_integer([H|T]),
 	    {C,decode_field(Int,?WSP_WELL_KNOWN_PARAMETERS)}
     end.
@@ -995,7 +995,7 @@ list_to_qval(Qval) ->
 %% The quick and dirty way to solve this problem...
 content_of_list(Val) ->    
     case catch list_to_integer(Val) of
-	{'EXIT',Reason} ->
+	{'EXIT',_Reason} ->
 	    {text,Val};
 	Int ->
 	    {integer,Int}    

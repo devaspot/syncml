@@ -12,11 +12,13 @@ do(Req) ->
     % Accept: mediatype
     % Accept-Charset:utf-8 or status 406
     % User-Agent:
+    error_logger:info_msg("Headers:", Req#mod.parsed_header),
     case lists:keyfind("content-type", 1, Req#mod.parsed_header) of
     {_Key, Val} ->
 	case Val of
 	"application/vnd.syncml+xml"->
-	    Body = Req#mod.entity_body;
+	    Body = Req#mod.entity_body,
+	    error_logger:info_msg("Content-type parsed, syncml+xml", []);
 	"application/vnd.syncml+wbxml"->
 	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
 	    io:format("Encoded xml: ~s~n",  [Body])
@@ -27,9 +29,12 @@ do(Req) ->
 		{[X|Acc], S}
 	end,
 	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
+	%error_logger:info_msg("XML?", [XML]),
 	ResponseBody = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
+	error_logger:info_msg("Response body:", [ResponseBody]),
 	{proceed, [{response, {response, [{content_type, Val}], ResponseBody}}]};
     false ->
+	error_logger:info_msg("Request contains unappropriate headers, no content-type!~p~n", []),
 	done
 	%return some error
     end.

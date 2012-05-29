@@ -14,10 +14,11 @@ start_link(Msg)->
 
 init([Msg])->
     template(Msg),
-    {ok, #state{fsm_pid = fsm_pid(get("session_id")), msg="Msg"}}.
+    {ok, #state{fsm_pid = fsm_pid(get("session_id")), msg=Msg}}.
 
 handle_call(msg, _From, State )->
     Result = sync_engine:message(State#state.fsm_pid, State#state.msg),
+    error_logger:info_msg("engine call result:", [Result]),
     {stop, normal, Result, State}.
 
 handle_cast(_Call, State)->

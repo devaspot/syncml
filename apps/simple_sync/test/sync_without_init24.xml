@@ -1,7 +1,4 @@
-<!--
-Example of Sync without Separate Initialization
-Combination of Package #2 and #4
--->
+<?xml version='1.0'?>
 <SyncML>
     <SyncHdr>
 	<VerDTD>1.2</VerDTD>
@@ -19,7 +16,7 @@ Combination of Package #2 and #4
 	    <Cmd>SyncHdr</Cmd>
 	    <TargetRef>http://www.syncml.org/sync-server</TargetRef>
 	    <SourceRef>IMEI:493005100592800</SourceRef>
-	    <Data>212</Data> 
+	    <Data>212</Data>
 	    <!--Statuscode for OK, authenticated for session-->
 	</Status>
 	<Status>
@@ -29,7 +26,7 @@ Combination of Package #2 and #4
 	    <Cmd>Alert</Cmd>
 	    <TargetRef>./contacts/james_bond</TargetRef>
 	    <SourceRef>./dev-contacts</SourceRef>
-	    <Data>200</Data> 
+	    <Data>200</Data>
 	    <!--Statuscode for OK-->
 	    <Item>
 		<Data>

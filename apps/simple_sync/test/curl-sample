@@ -1,0 +1,7 @@
+curl -H "Cache-Control:no-store" \
+-H "Transfer-Encoding: chunked" \
+-H "Accept:application/vnd.syncml+xml" \
+-H "Accept-Charset:utf-8" \
+-H "Content-type: application/vnd.syncml+xml" \
+-T example.xml \
+http://localhost:8881
