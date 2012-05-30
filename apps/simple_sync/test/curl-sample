@@ -3,5 +3,5 @@ curl -H "Cache-Control:no-store" \
 -H "Accept:application/vnd.syncml+xml" \
 -H "Accept-Charset:utf-8" \
 -H "Content-type: application/vnd.syncml+xml" \
--T sync_interruption.xml \
+-T sync_add.xml \
 http://localhost:8881

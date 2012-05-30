@@ -1,0 +1,39 @@
+<?xml version='1.0'?>
+<SyncML xmlns='syncml:SYNCML1.1'>
+<SyncHdr>
+    <SessionID>10</SessionID>
+</SyncHdr>
+<SyncBody>
+    <Sync>
+    <Add>
+	<CmdID>12345</CmdID>
+	<Cred>
+	    <Meta>
+		<Type xmlns='syncml:metinf'>syncml:auth-md5</Type>
+		<Format xmlns='syncml:metinf'>b64</Format>
+	    </Meta>
+	    <Data>OGNkNDI1ZTZjNjgwMTNiYWZkOWEyN2JjMjNlZDM4YzENCg==</Data>
+	</Cred>
+	<Meta>
+	    <Format xmlns='syncml:metinf'>chr</Format>
+	    <Type xmlns='syncml:metinf'>text/x-vcard</Type>
+	</Meta>
+	<Item>
+	    <Source>
+		<LocURI>./2</LocURI>
+	    </Source>
+	    <Data>BEGIN:VCARD
+	    VERSION:2.1
+	    FN:Bruce Smith
+	    N:Smith;Bruce
+	    TEL;WORK;VOICE:+1-919-555-1234
+	    TEL;WORK;FAX:+1-919-676-9876
+	    EMAIL;INTERNET:bruce1@host.com
+	    END:VCARD
+	    </Data>
+	</Item>
+    </Add>
+    </Sync>
+    <Final></Final>
+</SyncBody>
+</SyncML>

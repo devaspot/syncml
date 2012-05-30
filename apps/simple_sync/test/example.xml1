@@ -21,14 +21,16 @@
     </Meta>
 </SyncHdr>
 <SyncBody>
-    <Put><CmdID>1</CmdID>
-    <Meta>
-	<Type xmlns='syncml:metinf'>application/vnd.syncml-devinf+xml</Type>
-    </Meta>
-    <Item>
-	<Source><LocURI>./devinf10</LocURI>
-	</Source>
-	<Data><![CDATA[<DevInf xmlns='syncml:devinf'>
+    <Put>
+	<CmdID>1</CmdID>
+	<Meta>
+	    <Type xmlns='syncml:metinf'>application/vnd.syncml-devinf+xml</Type>
+	</Meta>
+	<Item>
+	    <Source>
+		<LocURI>./devinf10</LocURI>
+	    </Source>
+	    <Data><![CDATA[<DevInf xmlns='syncml:devinf'>
 		<VerDTD>1.0</VerDTD>
 		<Man>Ericsson</Man>
 		<SwV>R1A</SwV>
@@ -140,7 +142,7 @@
 		    <ValEnum>VTODO</ValEnum>
 		</CTCap>
 	    </DevInf>
-	]]></Data>
+	    ]]></Data>
 	</Item>
     </Put>
     <Alert>

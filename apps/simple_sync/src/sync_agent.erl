@@ -40,6 +40,9 @@ fsm_pid(SessionId)->
 	Pid
     end.
 
+% Alert | Atomic | Copy | Exec | Get | Map | Put | Results | Search |Sequence | Status | Sync)+, Final?
+template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Alert'})->
+    error_loger:info_msg("Alert!");
 template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
     put("session_id", xmerl_xs:value_of(xmerl_xs:select(".", E)));
 template(E)->
