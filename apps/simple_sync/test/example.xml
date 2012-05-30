@@ -13,6 +13,9 @@
 	<Add>
 	    <CmdID>8</CmdID>
 	</Add>
+	<Replace>
+	    <CmdID></CmdID>
+	</Replace>
     </Sync>
     <Final></Final>
 </SyncBody>

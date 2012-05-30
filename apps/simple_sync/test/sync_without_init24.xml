@@ -30,7 +30,7 @@
 	    <!--Statuscode for OK-->
 	    <Item>
 		<Data>
-		    <Anchor xmlns=’syncml:metinf’>
+		    <Anchor xmlns='syncml:metinf'>
 			<Next>276</Next>
 		    </Anchor>
 		</Data>
@@ -60,7 +60,7 @@
 		<Target><LocURI>./dev-contacts</LocURI></Target>
 		<Source><LocURI>./contacts/james_bond</LocURI></Source>
 		<Meta>
-		    <Anchor xmlns=’syncml:metinf’>
+		    <Anchor xmlns='syncml:metinf'>
 			<Last>20040119T081812Z </Last>
 			<Next>20040120T093223Z </Next>
 		    </Anchor>
@@ -74,7 +74,7 @@
 	    <NumberOfChanges>2</NumberOfChanges>
 	    <Replace>
 		<CmdID>7</CmdID>
-		<Meta><Type xmlns=’syncml:metinf’>text/x-vcard</Type></Meta>
+		<Meta><Type xmlns='syncml:metinf'>text/x-vcard</Type></Meta>
 		<Item>
 		    <Target><LocURI>1023</LocURI></Target>
 		    <Data><!--The vCard data would be placed here.--></Data>
@@ -82,7 +82,7 @@
 	    </Replace>
 	    <Add>
 		<CmdID>8</CmdID>
-		<Meta><Type xmlns=’syncml:metinf’>text/x-vcard</Type></Meta>
+		<Meta><Type xmlns='syncml:metinf'>text/x-vcard</Type></Meta>
 		<Item>
 		    <Source><LocURI>10536681</LocURI></Source>
 		    <Data><!--The vCard data would be placed here.--></Data>

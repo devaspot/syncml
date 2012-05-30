@@ -1,8 +1,4 @@
-<!--
-Client device initiate synchronization of Contacts, Calendar datastore. 
-Due to maximum message size, client isable to send all contacts modifications,
-in this example 10 contacts items, but only 5 of 10 calendar modifications.
--->
+<?xml version='1.0'?>
 <SyncML xmlns='SYNCML:SYNCML1.2'>
     <SyncHdr>
 	<VerDTD>1.2</VerDTD>
