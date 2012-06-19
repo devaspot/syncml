@@ -13,8 +13,8 @@ init([]) ->
     SyncEngineSup = {sync_engine_sup, {sync_engine_sup, start_link, []},
     permanent, 2000, supervisor, [sync_engine]},
 
-    SyncDataItemSup = {sync_data_item_sup, {sync_data_item_sup, start_link, []},
-    permanent, 2000, supervisor, [sync_data_item]},
+    SyncServerSup = {sync_server_sup, {sync_server_sup, start_link, []},
+    temporary, brutal_kill, worker, [simple_sync]},
 
-    {ok, {{one_for_one, 4, 3600}, [SyncAgentSup, SyncEngineSup, SyncDataItemSup]}}.
+    {ok, {{one_for_one, 4, 3600}, [SyncAgentSup, SyncEngineSup, SyncServerSup]}}.
 

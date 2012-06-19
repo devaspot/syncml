@@ -1,9 +1,39 @@
 -module(sync_adapter).
 -include_lib("inets/include/httpd.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+-export([message/1]).
 -export([do/1, log/3]).
 
+% SyncML I/F
+message(Msg)->
+    sync_agent:message("SIMPLE_MESSAGE").
+
 do(Req) ->
+    case check_headers(Req) of
+    CType ->
+	case CType of
+	"application/vnd.syncml+xml"->
+	    Body = Req#mod.entity_body,
+	    error_logger:info_msg("Content-type parsed, syncml+xml", []);
+	"application/vnd.syncml+wbxml"->
+	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
+	    error_logger:info_msg("Encoded xml:~s~n", [Body])
+	end,
+	Acc = fun(#xmlText{value = " ", pos = P}, Acc, S) ->
+	{Acc, P, S};
+	(X, Acc, S) ->
+	    {[X|Acc], S}
+	end,
+	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
+	ResponseBody = xmerl:export_simple([message(XML)], xmerl_xml),
+	error_logger:info_msg("Response body:", [ResponseBody]),
+	{proceed, [{response, {response, [{content_type, CType}], ResponseBody}}]};
+    false ->
+	error_logger:info_msg("Request contains unappropriate headers!~p~n", [Req#mod.parsed_header]),
+	done
+    end.
+
+check_headers(Req)->
     % TODO: Request/response headers, methods etc.
     % - General
     % Cache-Control:no-store / private
@@ -11,32 +41,12 @@ do(Req) ->
     % - Request
     % Accept: mediatype
     % Accept-Charset:utf-8 or status 406
-    % User-Agent:
-    error_logger:info_msg("Headers:", Req#mod.parsed_header),
+    % User-Agent:.
     case lists:keyfind("content-type", 1, Req#mod.parsed_header) of
-    {_Key, Val} ->
-	case Val of
-	"application/vnd.syncml+xml"->
-	    Body = Req#mod.entity_body,
-	    error_logger:info_msg("Content-type parsed, syncml+xml", []);
-	"application/vnd.syncml+wbxml"->
-	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
-	    io:format("Encoded xml: ~s~n",  [Body])
-	end,
-	Acc = fun(#xmlText{value = " ", pos = P}, Acc, S) ->
-	    {Acc, P, S};
-	    (X, Acc, S) ->
-		{[X|Acc], S}
-	end,
-	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
-	%error_logger:info_msg("XML?", [XML]),
-	ResponseBody = xmerl:export_simple([simple_sync:message(XML)], xmerl_xml),
-	error_logger:info_msg("Response body:", [ResponseBody]),
-	{proceed, [{response, {response, [{content_type, Val}], ResponseBody}}]};
+    {_Key, CType} ->
+	CType;
     false ->
-	error_logger:info_msg("Request contains unappropriate headers, no content-type!~p~n", []),
-	done
-	%return some error
+	false
     end.
 
 log(SessionID, Env, _Input) ->
