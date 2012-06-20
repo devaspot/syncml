@@ -24,7 +24,7 @@
 %% gen_fsm callbacks
 -export([listen/2,tidok_wait/2,invoke_resp_wait/2,result_wait/2,
 	 result_resp_wait/2,wait_timeout/2,
-	 init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3]).
+	 init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3, code_change/4]).
 
 -import(wtp_common,[start_ack_timer/3,start_retry_timer/3,start_wait_timer/3,
 		  stop_timer/1]).
@@ -70,7 +70,7 @@ start(Args) ->
     case gen_fsm:start_link(?MODULE,Args,?START_OPTIONS) of
 	{ok,Wtp} ->
 	    Wtp;
-	A ->
+	_A ->
 	    throw({error,cant_start_wtp_responder})
     end.
 
@@ -83,7 +83,7 @@ stop(Wtp) ->
 init(Tdb) ->
     {ok,listen,#state{tdb=Tdb}}.
 
-terminate(Reason, StateName, StatData) ->
+terminate(_Reason, _StateName, _StatData) ->
     ok.
 
 %% -----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ result_resp_wait({tr_abort_req,Reason}, State) ->
 result_resp_wait(#abort_pdu{type=AbortType,reason=AbortReason}, State) ->
     tr_abort_ind(AbortType,AbortReason,State),
     next_state_listen(State);
-result_resp_wait(#ack_pdu{tidver=TIDver,tpilist=TPIList}, State) ->
+result_resp_wait(#ack_pdu{tidver=_TIDver,tpilist=TPIList}, State) ->
     tr_result_cnf(TPIList,State),
     next_state_listen(State);
 result_resp_wait(timerTO_R, State) ->
@@ -302,7 +302,7 @@ wait_timeout(#invoke_pdu{rid=RID,tpilist=TpiListIn},State) ->
 	    ignore;
 	{?TRUE,[]} ->
 	    ack(RID,?FALSE,[],State);
-	{?TRUE,ExitInfo} ->
+	{?TRUE,_ExitInfo} ->
 	    ExitinfoList=State#state.ack_exitinfo,
 	    ack(RID,?FALSE,ExitinfoList,State)
     end,
@@ -313,7 +313,7 @@ wait_timeout(#ack_pdu{rid=RID,tidver=?TRUE,tpilist=TpiListIn}, State) ->
 	    ignore;
 	{?TRUE,[]} ->
 	    ack(RID,?FALSE,[],State);
-	{?TRUE,ExitInfo} ->
+	{?TRUE,_ExitInfo} ->
 	    ExitinfoList=State#state.ack_exitinfo,
 	    ack(RID,?FALSE,ExitinfoList,State)
     end,
@@ -345,7 +345,7 @@ wait_timeout(A,State) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_event(Event, StateName, StateData) ->
+handle_event(_Event, StateName, StateData) ->
     {nextstate, StateName, StateData}.
 
 %%----------------------------------------------------------------------
@@ -357,7 +357,7 @@ handle_event(Event, StateName, StateData) ->
 %%          {stop, Reason, NewStateData}                          |
 %%          {stop, Reason, Reply, NewStateData}                    
 %%----------------------------------------------------------------------
-handle_sync_event(Event, From, StateName, StateData) ->
+handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
 
@@ -367,9 +367,12 @@ handle_sync_event(Event, From, StateName, StateData) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_info(Info, StateName, StateData) ->
+handle_info(_Info, StateName, StateData) ->
     {nextstate, StateName, StateData}.
 
+
+code_change(_OldVsn, StateName, State, _Extra)->
+    {ok, StateName, State}.
 %%%----------------------------------------------------------------------
 %%% Internal functions
 %%%----------------------------------------------------------------------

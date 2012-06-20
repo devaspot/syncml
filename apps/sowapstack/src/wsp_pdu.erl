@@ -49,7 +49,7 @@ encode(#redirect{permanent=Permanent,
 		 rediradresses=AddressList},Env) ->
     <<?Redirect:8,Permanent:1,ReuseSecSession:1,0:6,
     (encode_addresslist(AddressList,Env#env.destination))/binary>>;
-encode(#disconnect{server_sessionid=SessionId},Env) ->
+encode(#disconnect{server_sessionid=SessionId},_Env) ->
     BinSessionId=encode_uintvar(SessionId),
     <<?Disconnect:8,BinSessionId/binary>>;
 encode(#get{type=Method,uri=URI,headers=Headers},Env) ->
@@ -91,7 +91,7 @@ encode(#push{type=PushType,headers=Headers,contenttype=ContentType,data=Data},
     HeadersLen=encode_uintvar(size(BinHeaders)+size(BinCT)),
     <<Type:8,HeadersLen/binary,BinCT/binary,
     BinHeaders/binary,Data/binary>>;
-encode(#suspend{server_sessionid=SessionId},Env) ->
+encode(#suspend{server_sessionid=SessionId},_Env) ->
     BinSessionId=encode_uintvar(SessionId),
     <<?Suspend:8,BinSessionId/binary>>;
 encode(#resume{server_sessionid=SessionId,capabilities=Cap,
@@ -111,7 +111,7 @@ encode(Pdu,_) ->
 % Unpack a binary Message PDU into a tuple
 % An SPDU is a tuple {Type,Content}
 % Binpdu = string()
-decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,Env) ->
+decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,_Env) ->
     {Content1,CapabilLen}=decode_uintvar(Content),
     {Content2,HeadersLen}=decode_uintvar(Content1),
     {Content3,Cap}=
@@ -119,7 +119,7 @@ decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,Env) ->
     {BinHeaders,<<>>}=split_binary(Content3,HeadersLen),
     #connect{version={Major_vers,Minor_vers},capabilities=Cap,
 	     headers=wsp_bytecodes_headers:decode_headers(BinHeaders)};
-decode(<<?ConnectReply:8,Content/binary>>,Env) ->
+decode(<<?ConnectReply:8,Content/binary>>,_Env) ->
     {Content1,SessionId}=decode_uintvar(Content),
     {Content2,CapabilLen}=decode_uintvar(Content1),
     {Content3,HeadersLen}=decode_uintvar(Content2),
@@ -132,8 +132,8 @@ decode(<<?Redirect:8,Permanent:1,ReuseSecSession:1,0:6,Content/binary>>,Env) ->
     #redirect{permanent=wsp_bytecodes:bin_to_bool(Permanent),
 	      reuse_secure_session=wsp_bytecodes:bin_to_bool(ReuseSecSession),
 	      rediradresses=decode_addresslist(Content,Env#env.destination)};
-decode(<<?Disconnect:8,Content/binary>>,Env) ->
-    {Content1,SessionId}=decode_uintvar(Content),
+decode(<<?Disconnect:8,Content/binary>>,_Env) ->
+    {_Content1,SessionId}=decode_uintvar(Content),
     #disconnect{server_sessionid=SessionId};
 decode(<<Type:8,Content/binary>>,Env) when Type==?Get;Type==?Options;
 					   Type==?Trace;
@@ -171,8 +171,8 @@ decode(<<Type:8,Content/binary>>,Env) when Type==?Push;Type==?ConfirmedPush ->
     Headers=create_headers(Env#env.headers,DynHeaders),
     #push{type=decode_push_type(Type),headers=Headers,
 	  contenttype=ContentType,data=Data};
-decode(<<?Suspend:8,Content/binary>>,Env) ->
-    {Content1,SessionId}=decode_uintvar(Content),
+decode(<<?Suspend:8,Content/binary>>,_Env) ->
+    {_Content1,SessionId}=decode_uintvar(Content),
     #suspend{server_sessionid=SessionId};
 decode(<<?Resume:8,Content/binary>>,Env) ->
     {Content1,SessionId}=decode_uintvar(Content),
@@ -181,7 +181,7 @@ decode(<<?Resume:8,Content/binary>>,Env) ->
 						   Env#env.cap),
     #resume{server_sessionid=SessionId,capabilities=Cap,
 	    headers=wsp_bytecodes_headers:decode_headers(BinHeaders)};
-decode(Binpdu,Env) ->
+decode(Binpdu,_Env) ->
     ?error("Error when decoding PDU ~p",[Binpdu],decodePDU),
     throw({error,cannot_decode_wsp_pdu}).
 
@@ -198,14 +198,14 @@ encode_addresslist([],_) ->
     [];
 encode_addresslist([#address{address=Address,bearer=Bearer,port=Port}|List],
 		  DestAddr) ->
-    {BinBearer,BInc}=
+    {_BinBearer,BInc}=
 	if
 	    Bearer==undefined ->
 		{<<>>,0};
 	    true ->
 		{<<Bearer:8>>,1}
 	end,
-    {BinPort,PInc}=
+    {_BinPort,PInc}=
 	if
 	    Port==undefined ->
 		{<<>>,0};
@@ -268,9 +268,9 @@ encode_uintvar(Int,S) ->
 decode_uintvar(Content) ->
     decode_uintvar(Content,0,1).
 
-decode_uintvar(_,Int,6) ->
+decode_uintvar(_,_Int,6) ->
     throw({error,too_big_num});
-decode_uintvar(<<0:1,Int:7,Content/binary>>,Out,S) ->
+decode_uintvar(<<0:1,Int:7,Content/binary>>,Out,_S) ->
     {Content,Int+Out};
 decode_uintvar(<<1:1,Int:7,Content/binary>>,Out,S) ->
     decode_uintvar(Content,(Int+Out) bsl 7,S+1).
@@ -288,7 +288,7 @@ encode_method_type(Method,Type,ExtendedMethods) ->
     case lists:keysearch(Method,1,ExtendedMethods) of
 	{value,{_,Code,Type}} ->
 	    Code;
-	Error ->
+	_Error ->
 	    throw({error,invalid_method})
     end.
 
@@ -303,14 +303,14 @@ decode_method_type(Code,get,ExtendedMethods) when 16#50=<Code,Code=<16#5f ->
     case lists:keysearch(Code,1,ExtendedMethods) of
 	{value,{Method,_,get}} ->
 	    Method;
-	Error ->
+	_Error ->
 	    throw({error,invalid_method})
     end;
 decode_method_type(Code,post,ExtendedMethods) when 16#70=<Code,Code=<16#7f ->
     case lists:keysearch(Code,2,ExtendedMethods) of
 	{value,{Method,_,post}} ->
 	    Method;
-	Error ->
+	_Error ->
 	    throw({error,invalid_method})
     end;
 decode_method_type(_,_,_) ->
@@ -325,20 +325,20 @@ encode_push_type(?ConfirmedPush) -> confirmed_push.
 
 
 %%% Abort reasons used in indications
-encode_abort_reason(congestion) ->	?CONGESTION;
-encode_abort_reason(user_request) ->	?USERREQ;
-encode_abort_reason(proto_error) ->	?WSP_PROTOERR;
-encode_abort_reason(disconnect) ->	?DISCONNECT;
-encode_abort_reason(suspend) ->		?SUSPEND;
-encode_abort_reason(resume) ->		?RESUME;
-encode_abort_reason(congestion) ->	?CONGESTION;
-encode_abort_reason(connect_error) ->	?CONNECTERR;
-encode_abort_reason(mru_exceeded) ->	?MRUEXCEEDED;
-encode_abort_reason(mor_exceeded) ->	?MOREXCEEDED;
-encode_abort_reason(peer_request) ->	?PEERREQ;
-encode_abort_reason(net_error) ->	?NETERR;
-encode_abort_reason(X) -> 
-    {error,{unknown_abort_reason,X}}.
+%encode_abort_reason(congestion) ->	?CONGESTION;
+%encode_abort_reason(user_request) ->	?USERREQ;
+%encode_abort_reason(proto_error) ->	?WSP_PROTOERR;
+%encode_abort_reason(disconnect) ->	?DISCONNECT;
+%encode_abort_reason(suspend) ->		?SUSPEND;
+%encode_abort_reason(resume) ->		?RESUME;
+%encode_abort_reason(congestion) ->	?CONGESTION;
+%encode_abort_reason(connect_error) ->	?CONNECTERR;
+%encode_abort_reason(mru_exceeded) ->	?MRUEXCEEDED;
+%encode_abort_reason(mor_exceeded) ->	?MOREXCEEDED;
+%encode_abort_reason(peer_request) ->	?PEERREQ;
+%encode_abort_reason(net_error) ->	?NETERR;
+%encode_abort_reason(X) -> 
+%    {error,{unknown_abort_reason,X}}.
 
 decode_abort_reason(?CONGESTION) ->	congestion;
 decode_abort_reason(?USERREQ) ->	user_request;
@@ -346,7 +346,7 @@ decode_abort_reason(?WSP_PROTOERR) ->	proto_error;
 decode_abort_reason(?DISCONNECT) ->	disconnect;
 decode_abort_reason(?SUSPEND) ->	suspend;
 decode_abort_reason(?RESUME) ->		resume;
-decode_abort_reason(?CONGESTION) ->	congestion;
+%decode_abort_reason(?CONGESTION) ->	congestion;
 decode_abort_reason(?CONNECTERR) ->	connect_error;
 decode_abort_reason(?MRUEXCEEDED) ->	mru_exceeded;
 decode_abort_reason(?MOREXCEEDED) ->	mor_exceeded;
@@ -375,7 +375,7 @@ decode_content_type(Content) ->
     decode_string(Content,[]).
 
 
-decode_string(<<0:8,Content/binary>>,CT) ->
+decode_string(<<0:8,_Content/binary>>,CT) ->
     list_to_atom(lists:reverse(CT));
 decode_string(<<Token:8,Content/binary>>,CT) ->
     decode_string(Content,[Token|CT]).
@@ -385,19 +385,19 @@ decode_string(<<Token:8,Content/binary>>,CT) ->
 
 pp_spdu(<<>>) ->
     io:format("---Done with PDU---~n");
-pp_spdu(Pdu) when binary(Pdu) ->
+pp_spdu(Pdu) when is_binary(Pdu) ->
     case catch pp_decode(Pdu,#env{}) of
 	ok ->
 	    io:format("---Done with PDU---~n");
 	Error ->
 	    io:format("Got Error ~p when decoding ~p~n",[Error,Pdu])
     end;
-pp_spdu(Pdu) when list(Pdu) ->
+pp_spdu(Pdu) when is_list(Pdu) ->
     pp_spdu(list_to_binary(Pdu)).
 
 
 %% Petty prints a decoded PDU
-pp_decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,Env) ->
+pp_decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,_Env) ->
     io:format("WSP Type: Connect~n"),
     io:format("  Version: ~p:~p~n",[Major_vers,Minor_vers]),
     {Content1,CapabilLen}=decode_uintvar(Content),
@@ -409,7 +409,7 @@ pp_decode(<<?Connect:8,Major_vers:4,Minor_vers:4,Content/binary>>,Env) ->
     {BinHeaders,<<>>}=split_binary(Content3,HeadersLen),
     wsp_bytecodes_headers:pp_headers(BinHeaders),
     ok;
-pp_decode(<<?ConnectReply:8,Content/binary>>,Env) ->
+pp_decode(<<?ConnectReply:8,Content/binary>>,_Env) ->
     io:format("WSP Type: ConnectReply~n"),
     {Content1,SessionId}=decode_uintvar(Content),
     io:format("  Server Session Id: ~p~n",[SessionId]),
@@ -430,9 +430,9 @@ pp_decode(<<?Redirect:8,Permanent:1,ReuseSecSession:1,0:6,Content/binary>>,E) ->
     io:format("  RedirAddr: ~p~n",[decode_addresslist(Content,
 						      E#env.destination)]),
     ok;
-pp_decode(<<?Disconnect:8,Content/binary>>,Env) ->
+pp_decode(<<?Disconnect:8,Content/binary>>,_Env) ->
     io:format("WSP Type: Disconnect~n"),
-    {Content1,SessionId}=decode_uintvar(Content),
+    {_Content1,SessionId}=decode_uintvar(Content),
     io:format("  Server Session Id: ~p~n",[SessionId]),
     ok;
 pp_decode(<<Type:8,Content/binary>>,Env) when Type==?Get;Type==?Options;
@@ -461,7 +461,7 @@ pp_decode(<<Type:8,Content/binary>>,Env) when Type==?Post;Type==?Put ->
     wsp_bytecodes_headers:pp_headers(BinHeaders),
     io:format("  length(Body):~p ~p~n",[size(Data),Data]),
     ok;
-pp_decode(<<?Reply:8,Status:8,Content/binary>>,Env) ->
+pp_decode(<<?Reply:8,Status:8,Content/binary>>,_Env) ->
     io:format("WSP Type: Reply~n"),
     io:format("  Status: ~p~n",[wsp_bytecodes:decode_status(Status)]),
     {Content1,HeadersLen}=decode_uintvar(Content),
@@ -472,19 +472,19 @@ pp_decode(<<?Reply:8,Status:8,Content/binary>>,Env) ->
     wsp_bytecodes_headers:pp_headers(BinHeaders),
     io:format("  length(Body):~p ~p~n",[size(Data),Data]),
     ok;
-pp_decode(<<Type:8,Content/binary>>,Env) when Type==?Push;
+pp_decode(<<Type:8,Content/binary>>,_Env) when Type==?Push;
 					      Type==?ConfirmedPush ->
     io:format("WSP Type: ~p~n",[decode_push_type(Type)]),
     {Content1,HeadersLen}=decode_uintvar(Content),
     io:format("    Headers length of field: ~p~n",[HeadersLen]),
     {Content2,CTLen,ContentType}=decode_content_type(Content1),
     io:format("  ContentType: ~p~n",[ContentType]),
-    {BinHeaders,Data}=split_binary(Content2,HeadersLen-CTLen),
+    {BinHeaders,_Data}=split_binary(Content2,HeadersLen-CTLen),
     wsp_bytecodes_headers:pp_headers(BinHeaders),
     ok;
-pp_decode(<<?Suspend:8,Content/binary>>,Env) ->
+pp_decode(<<?Suspend:8,Content/binary>>,_Env) ->
     io:format("WSP Type: Suspend~n"),
-    {Content1,SessionId}=decode_uintvar(Content),
+    {_Content1,SessionId}=decode_uintvar(Content),
     io:format("  Server Session Id: ~p~n",[SessionId]),
     ok;
 pp_decode(<<?Resume:8,Content/binary>>,Env) ->
@@ -498,6 +498,6 @@ pp_decode(<<?Resume:8,Content/binary>>,Env) ->
     wsp_bytecodes:pp_cap(Cap),
     wsp_bytecodes_headers:pp_headers(BinHeaders),
     ok;
-pp_decode(Binpdu,Env) ->
+pp_decode(_Binpdu,_Env) ->
     throw({error,cannot_decode_wsp_pdu}).
 

@@ -15,7 +15,7 @@
 -export([start_link/1,stop/1,app_reg/3,app_unreg/2]).
 
 %% Internal gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wdp.hrl").
 -include("wdpif.hrl").
@@ -44,7 +44,7 @@ init({Sref,Above_pid}) ->
     {ok,#state{above=Above_pid,
 	       appref_db=AppRef_db}}.
 
-terminate(Reason,State) ->
+terminate(Reason,_State) ->
     ?trace("Stopped WDP manager:~p",[Reason],terminate).
 
 
@@ -55,7 +55,7 @@ check_registered_applications(Sref,AppRef_db) ->
     lists:foreach(
       fun({{Address,Port,?ANY_ANY_IPv4},{AppRef,_}}) ->
 	      open_port(Address,Port,AppRef,AppRef_db);
-	 ({{Address,Port,?GSM_SMS_GSMMSISDN},{AppRef,_}}) ->
+	 ({{_Address,_Port,?GSM_SMS_GSMMSISDN},{_AppRef,_}}) ->
 	      ok
       end,
       wap_stack_db:lookup_app(Sref)).
@@ -81,19 +81,20 @@ handle_call({app_reg,AppRef,{Address,Port,Bearer}},_,State) ->
 %% Addr is a {Address,Port,Bearer} tuple
 handle_call({app_unreg,AppRef},_,State) -> 
     case ets:lookup(State#state.appref_db,AppRef) of
-	[{{_,_,?GSM_SMS_GSMMSISDN},Handle}] ->
+	[{{_,_,?GSM_SMS_GSMMSISDN},_Handle}] ->
 	    ets:delete(State#state.appref_db,AppRef),
-	    {reply,ok,State};
+	    Reply = {reply,ok,State};
 	[{{_,_,?ANY_ANY_IPv4},Socket}] ->
 	    case gen_udp:close(Socket) of
 		{error, Reason} ->
-		    {reply,{error,Reason},State};
+		    Reply = {reply,{error,Reason},State};
 		ok ->
 		    ets:delete(State#state.appref_db,AppRef),
-		    {reply,ok,State}
+		    Reply = {reply,ok,State}
 	    end
     end,
-    {reply,ok,State};
+    Reply;
+    %{reply,ok,State};
 handle_call(stop, _, State) ->
     {stop, normal, ok, State}.
 
@@ -104,7 +105,7 @@ handle_cast({unitdata_req,{AppRef,{Da,Dp,Db}},Data},State) ->
     case ets:lookup(State#state.appref_db,AppRef) of
 	[]  ->
 	    error_ind(State#state.above,Tpar,not_registered);
-	[{_,Handle}] when Db==?GSM_SMS_GSMMSISDN ->
+	[{_,_Handle}] when Db==?GSM_SMS_GSMMSISDN ->
 	    ?error("GSM SMS GSM_MSISDN not supported~n",[],handle_cast),
 	    error_ind(State#state.above,Tpar,sms_not_supported);
 	[{_,Socket}] when Db==?ANY_ANY_IPv4 ->
@@ -114,7 +115,7 @@ handle_cast({unitdata_req,{AppRef,{Da,Dp,Db}},Data},State) ->
 		{error,Reason} ->
 		    error_ind(State#state.above,Tpar,Reason)
 	    end;
-	Error ->
+	_Error ->
 	    ?error("Sending on unsupported bearer",[],handle_cast),
 	    error_ind(State#state.above,Tpar,unsupported_bearer)
     end,
@@ -139,10 +140,13 @@ handle_info(Info, State) ->
     ?error("ERROR: ~p",[Info],handle_info),
     {noreply, State}.
 
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
+
 
 %% =============================================================================
 %% Opens a Port for a UDP (IPv4) connection
-open_port(Address,Port,AppRef,UAddr_db) ->
+open_port(_Address,Port,AppRef,UAddr_db) ->
     case gen_udp:open(Port, [binary]) of 
 	{error, Reason} ->
 	    {error, Reason};

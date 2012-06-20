@@ -26,7 +26,7 @@
 	 start_link/1,stop/0]).
 
 %% Internal gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wdp.hrl").
 
@@ -114,10 +114,12 @@ init(StartArgs) ->
     ?trace("Started WAP stack server manager:",[],init),
     {ok,#state{sref=0,tid=0,port_c=40000,appref=0}}.
 
-terminate(Reason,State) ->
+terminate(Reason,_State) ->
     wap_stack_db:stop(),
     ?trace("Stopped WAP stack manager ~p",[Reason],terminate).
 
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 			      
 
 
@@ -144,7 +146,7 @@ handle_call({stop_stack,Sref},_,State) ->
 	    {error,Reason} ->
 		?error("Can't stop stack:~p",[Reason],handle_call),
 		{error,Reason};
-	    {Type,Stack} ->
+	    {Type,_Stack} ->
 		wap_stack_db:remove_stack(Sref),
 		wap_stack_sup:stop_stack(Sref),
 		?trace("Stopped stack:~p of type ~p",[Sref,Type],handle_call),
@@ -217,7 +219,7 @@ handle_call({unit_push_req,Sref,UAddr,HTTPCont},_,State) ->
     NewState=State#state{tid=if Tid<255 -> Tid+1; true -> 0 end},
     Ans=apply_wsp_function(Sref,unit_push_req,[UAddr,Tid,HTTPCont]),
     {reply,Ans,NewState};
-handle_call(A,_,State) ->    
+handle_call(_A,_,State) ->    
     {reply,{error,invalid_command},State}.
 
 
@@ -227,7 +229,7 @@ handle_call(A,_,State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_cast(A, State) ->
+handle_cast(_A, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -236,7 +238,7 @@ handle_cast(A, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 %% =============================================================================
@@ -319,7 +321,7 @@ register_application(Sref,AppType,App,Address,BearerType,State) ->
 %%   WSP: AppRef -> App
 %% Note that a single application (AppRef) might be registred on a number of
 %% WAP stacks.
-reregister_application(AppRef,App,State) ->
+reregister_application(AppRef,App,_State) ->
     ?debug("Re-Register application ~p",[AppRef],reregister_application),
     Stack=case wap_stack_db:find_stackref(AppRef) of
 	      {ok,{StRef,Tpar}} ->
@@ -338,7 +340,7 @@ reregister_application(AppRef,App,State) ->
 		  {error,application_not_registred}
 	  end,
     case Stack of
-	{ok,StRef1,Tpar1,Type1,Wsp1,Wdp1} ->
+	{ok,StRef1,Tpar1,_Type1,Wsp1,_Wdp1} ->
 	    wsp_man:app_reg(Wsp1,AppRef,App),
 	    wap_stack_db:insert_app(StRef1,{Tpar1,{AppRef,App}});
 	Ans ->
@@ -378,6 +380,6 @@ find_port(_,wae_ua,State) ->
 find_port(_,wta_ua,State) ->
     Port=State#state.port_c,
     {State#state{port_c=Port+1},Port};
-find_port(Type,push_useragent,State) ->
+find_port(_Type,push_useragent,_State) ->
     ok.
 

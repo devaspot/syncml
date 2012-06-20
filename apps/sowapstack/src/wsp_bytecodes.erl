@@ -40,7 +40,7 @@ encode_status(Status) when Status>=400,Status=<415 ->
     (Status div 100) * 16#10 + (Status rem 100);
 encode_status(Status) when Status>=500,Status=<505 ->
     (Status div 100) * 16#10 + (Status rem 100) + 16;
-encode_status(Status) ->
+encode_status(_Status) ->
     throw({error,unknown_status}).
 
 %% Decodes Assigned numbers in WAP to HTTP status codes
@@ -146,7 +146,7 @@ encode_capabils(Cap,DefCap) ->
 	    true ->
 		encode_other(Cap#cap.other)
 	end,
-    concat_binary([BinClientSDU,BinServerSDU,BinProtocolOptions,
+    list_to_binary([BinClientSDU,BinServerSDU,BinProtocolOptions,
 		   BinMOM,BinMOP,BinExtendedMethods,BinHeaderCodePages,
 		   BinAliases,BinOther]).
 
@@ -166,7 +166,7 @@ encode_aliases_val(List) ->
 	
 encode_other([]) ->
     <<>>;
-encode_other([{Id,Param}|List]) ->
+encode_other([{Id,_Param}|List]) ->
     BinStr=encode_string(Id),
     <<(wsp_pdu:encode_uintvar(size(BinStr)))/binary,BinStr/binary,
     (encode_other(List))/binary>>.
@@ -286,7 +286,7 @@ bool_to_bin(false) -> ?FALSE.
 
 %% .............................................................................
 %% Adds an extra 0
-encode_string(Str) when atom(Str) ->
+encode_string(Str) when is_atom(Str) ->
     list_to_binary(atom_to_list(Str) ++ [0]);
 encode_string(Str) ->
     list_to_binary(Str ++ [0]).
@@ -357,7 +357,7 @@ decode_mpdata(Content) ->
     {[],lists:reverse(decode_multipart(Content1,MultiLen))}.
 
 %% .............................................................................
-decode_multipart(Content1,0) ->
+decode_multipart(_Content1,0) ->
     [];
 decode_multipart(Content1,MultiLen) ->
     {Content2,HeadersLen}=unpack_uintvar(Content1),
@@ -399,7 +399,7 @@ well_known_field(Val,[{_,_,Vallist}|Rest]) ->
 well_known_field(_,[]) ->
     false.
 
-well_known_code(Code,[{Code,_,_}|Rest]) ->
+well_known_code(Code,[{Code,_,_}|_Rest]) ->
     true;
 well_known_code(Code,[_|Rest]) ->
     well_known_code(Code,Rest);

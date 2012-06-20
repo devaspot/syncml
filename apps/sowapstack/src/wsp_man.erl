@@ -28,7 +28,7 @@
 	 create_method_pdu/2]).
 
 %% Internal gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wsp.hrl").
 -include("wspif.hrl").
@@ -113,7 +113,7 @@ init({Type,Sref}) ->
 	      wspCO_wtp_wdp ->
 		  wap_stack_db:insert_stack(Sref,Type,{Wsp,undef,undef}),
 		  {ok,Wtp}=wtp_man:start_link({Sref,Wsp}),
-		  B=wap_stack_db:update_stack(Sref,{wtp,Wtp}),
+		  _B=wap_stack_db:update_stack(Sref,{wtp,Wtp}),
 		  Wtp;
 	      wspCO_wtp_wtls_wdp ->
 		  wap_stack_db:insert_stack(Sref,Type,{Wsp,undef,undef,undef}),
@@ -130,13 +130,15 @@ terminate(Reason,State) ->
     ?trace("Terminated WSP manager: ~p",[Reason],terminate),
     wsp_db:stop(State#state.sdb).
 
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 
 %% Only do this during restart of the stack. Note that there cannot be any
 %% (WAP Stack user) applications registred during startup of the stack.
 %% lookup_app returns a list with {{Address,Port,Bearer},Application} tuples
 check_registered_applications(Sref,AppRef_db) ->
     lists:foreach(
-      fun({UAddr,{AppRef,App}}) ->
+      fun({_UAddr,{AppRef,App}}) ->
 	      wsp_db:insert_appref(AppRef_db,AppRef,App)
       end,
       wap_stack_db:lookup_app(Sref)).
@@ -195,7 +197,7 @@ handle_call({connect_req,TparIn,Headers,Cap},_,State)->
 		{ok,WSPses};
 	    {error,Reason} ->
 		{error,Reason};
-	    Error -> % Error in encoding outgoing request
+	    _Error -> % Error in encoding outgoing request
 		{error,invalid_command}
 	end,
     {reply,Ans,State};
@@ -336,7 +338,7 @@ s_connect_req(Tpar,Headers,Cap,State) ->
 	    state_null_client(Tpar,Headers,Cap,State);
 	{error,no_session} ->
 	    state_null_client(Tpar,Headers,Cap,State);
-	{error,Reason} ->
+	{error,_Reason} ->
 	    {error,invalid_command}
 	end.
 
@@ -351,7 +353,7 @@ tr_invoke_ind(WTPres,Tpar,Class,UAck,BinPdu,State) ->
     case wsp_db:lookup_session_data(State#state.sdb,Tpar) of
 	{ok,{WSPses,Type}} ->
 	    case BinPdu of
-		<<?Connect:8,Content/binary>> ->
+		<<?Connect:8,_Content/binary>> ->
 		    disconnect_session(WSPses,Tpar,State#state.sdb),
 		    check_size(BinPdu,(#cap{})#cap.server_sdu),
 		    state_null_server(Tpar,BinPdu,WTPres,State); % FIXME!
@@ -404,7 +406,7 @@ state_null_client(Tpar,Hlist,Cap,State) ->
 
     case wsp_session_c:start_link({State#state.below,State#state.sdb,
 				   Tpar,Headers,Cap,EVlist}) of
-	WSPses when pid(WSPses) ->
+	WSPses when is_pid(WSPses) ->
 	    wsp_db:add_session(State#state.sdb,Tpar,
 			       WSPses,Headers,Cap,EVlist,'client'),
 	    {ok,WSPses};
@@ -423,7 +425,7 @@ state_null_server(Tpar,BinPdu,WTPres,State) ->
 	    EVlist=getHeaderValue('encoding-version',Headers),
 	    case wsp_session_s:start_link({State#state.below,State#state.sdb,
 					   Tpar,Headers,Cap,EVlist,WTPres}) of
-		WSPses when pid(WSPses) ->
+		WSPses when is_pid(WSPses) ->
 		    wsp_db:add_session(State#state.sdb,Tpar,
 				       WSPses,Headers,Cap,EVlist,'server'),
 		    ok;
@@ -453,7 +455,7 @@ check_server_state(Tpar,WTPres,State) ->
 	    throw({ok,abort_sent});
 	true ->
 	    case wsp_db:lookup_appref(State#state.sdb,Tpar) of
-		{error,Reason} ->
+		{error,_Reason} ->
 		    tr_abort_req(WTPres,?DISCONNECT),
 		    throw({ok,abort_sent});
 		_  ->
@@ -468,7 +470,7 @@ check_client_state(Tpar,State) ->
 	    throw({error,max_session});
 	true ->
 	    case wsp_db:lookup_appref(State#state.sdb,Tpar) of
-		{error,Reason} ->
+		{error,_Reason} ->
 		    throw({error,no_application});
 		_  ->
 		    ok
@@ -504,7 +506,7 @@ pseudo_suspend(WSPses) ->
 %%   the Tid in the Spdu
 tr_invoke_req(WTP,WSP,Tpar,Class,Pdu,Env,Maxsize) ->
     case catch wsp_pdu:encode(Pdu,Env) of
-	BinPdu when binary(BinPdu) ->
+	BinPdu when is_binary(BinPdu) ->
 	    if
 		Maxsize/=0,size(BinPdu)>Maxsize ->
 		    {error,mruexceeded};
@@ -527,7 +529,7 @@ tr_invoke_req(WTP,WSP,Tpar,Class,Pdu,Env,Maxsize) ->
 %% - Always sent to the WTP responder process.
 tr_result_req(WTP,Pdu,Env,Maxsize) ->
     case catch wsp_pdu:encode(Pdu,Env) of
-	BinPdu when binary(BinPdu) ->
+	BinPdu when is_binary(BinPdu) ->
 	    if
 		Maxsize/=0,size(BinPdu)>Maxsize ->
 		    {error,mruexceeded};
@@ -561,7 +563,7 @@ td_unitdata_req(Tpar,Tid,Pdu,State) ->
 	    ?error("Cannot encode PDU ~p got:~p",[Pdu,Reason],td_unitdata_req),
 	    throw({error,invalid_command});
 	RawBin ->
-	    Bin=concat_binary([<<Tid>>,RawBin]),
+	    Bin=list_to_binary([<<Tid>>,RawBin]),
 	    wdp_man:unitdata_req(State#state.below,Tpar,Bin),
 	    {ok,Tid}
     end.
@@ -584,8 +586,8 @@ sendto_app(Tpar,unitdata_ind,<<Tid:8,BinPdu/binary>>,State) ->
 	    unit_method_invoke_ind(App,State#state.stackref,{Tpar,Tid},
 				   Method,{Uri,Headers,CT,Data})
     end;
-sendto_app(Tpar,error_ind,Reason,State) ->
-    App=wsp_db:lookup_appref(State#state.sdb,Tpar),
+sendto_app(Tpar,error_ind,_Reason,State) ->
+    _App=wsp_db:lookup_appref(State#state.sdb,Tpar),
     ok.
 
 
@@ -595,33 +597,33 @@ sendto_app(Tpar,error_ind,Reason,State) ->
 %% The default encoding version, if no other version is sent from the other
 %% party, is encoding version 1.2
 %% FIXME: Don't bothering with encoding version for the moment.
-add_my_encoding_version(A) ->
-    {A,[]};
-add_my_encoding_version({U,H,C,B}) ->
-    H2=[{'encoding-version',4}|H],
-    {{U,H2,C,B},[{0,4}]};
-add_my_encoding_version({U,H}) ->
-    H2=[{'encoding-version',4}|H],
-    {{U,H2},[{0,4}]}.
+%add_my_encoding_version(A) ->
+%    {A,[]};
+%add_my_encoding_version({U,H,C,B}) ->
+%    H2=[{'encoding-version',4}|H],
+%    {{U,H2,C,B},[{0,4}]};
+%add_my_encoding_version({U,H}) ->
+%    H2=[{'encoding-version',4}|H],
+%    {{U,H2},[{0,4}]}.
 
 %% The encoding version may be known from a previous request or be included in
 %% this request.
 add_current_encoding_version(HTTPCont,[]) ->
     extract_encoding_version(HTTPCont);
-add_current_encoding_version(HTTPCont,EVlist) ->
+add_current_encoding_version(_HTTPCont,EVlist) ->
     EVlist.
 
 
 %% Extract the encoding version from a header list.
-extract_encoding_version({U,H,C,B}) ->
+extract_encoding_version({_U,H,_C,_B}) ->
     getHeaderValue('encoding-version',H);
-extract_encoding_version({U,H}) ->
+extract_encoding_version({_U,H}) ->
     getHeaderValue('encoding-version',H).
 
 %% lists:keysearch(Attr,1,List).
-getHeaderValue(Attr,[]) ->
+getHeaderValue(_Attr,[]) ->
     [];
-getHeaderValue(Attr,[{Attr,Value}|Rest]) ->
+getHeaderValue(Attr,[{Attr,Value}|_Rest]) ->
     Value;
 getHeaderValue(Attr,[_|Rest]) ->
     getHeaderValue(Attr,Rest).
@@ -631,7 +633,7 @@ getHeaderValue(Attr,[_|Rest]) ->
 %% This is also Generic test case 1
 %% Note:
 %% - A Maxsize is set to 0, means no limit
-check_size(BinPdu,0) ->
+check_size(_BinPdu,0) ->
     ok;
 check_size(BinPdu,MaxSize) when size(BinPdu)>MaxSize ->
     ?debug("Size exceeded... ~p>~p",[size(BinPdu),MaxSize],check_size),
@@ -673,22 +675,22 @@ negotiate_caps(AppCaps,Caplist) ->
 
 %% Create a new, complete Capability list, unconditionally.
 %% That is any Cap from the client is stored in the current Capabilitylist
-negotiate_new_caps([],Caplist) ->
-    {[],Caplist};
-negotiate_new_caps(SerCaps,Caplist) ->
-    Caps=create_caplist_noneg(SerCaps,Caplist),
-    ToAppCaps=remove_known_caps(SerCaps,Caplist),
-    {ToAppCaps,Caps}.
+%negotiate_new_caps([],Caplist) ->
+%    {[],Caplist};
+%negotiate_new_caps(SerCaps,Caplist) ->
+%    Caps=create_caplist_noneg(SerCaps,Caplist),
+%    ToAppCaps=remove_known_caps(SerCaps,Caplist),
+%    {ToAppCaps,Caps}.
 
 
 %% Create a new, complete Capability list, unconditionally.
 %% That is any Cap from the application is stored in the current Capabilitylist,
 %% except aliases that are used only by the other side.
-create_caplist_noneg([],Caplist) ->
-    Caplist;
-create_caplist_noneg([{Key,Value}|NewCaplist],Knowncaps) ->
-    Knowncaps2=lists:keyreplace(Key,1,Knowncaps,{Key,Value}),
-    create_caplist_noneg(NewCaplist,Knowncaps2).
+%create_caplist_noneg([],Caplist) ->
+%    Caplist;
+%create_caplist_noneg([{Key,Value}|NewCaplist],Knowncaps) ->
+%    Knowncaps2=lists:keyreplace(Key,1,Knowncaps,{Key,Value}),
+%    create_caplist_noneg(NewCaplist,Knowncaps2).
 
 
 %% Create a new, complete Capability list, only if Cap has "lower" value than
@@ -711,35 +713,35 @@ create_caplist_neg([{Key,Value}|NewCaplist],Knowncaps) ->
 %% - Val the new received, suggested.
 negotiate_cap(cap_client_sdu,Val,Cval) when Val<Cval ->
     {cap_client_sdu,Val};
-negotiate_cap(cap_client_sdu,Val,Cval) ->
+negotiate_cap(cap_client_sdu,_Val,Cval) ->
     {cap_client_sdu,Cval};
 negotiate_cap(cap_server_sdu,Val,Cval) when Val<Cval ->
     {cap_server_sdu,Val};
-negotiate_cap(cap_server_sdu,Val,Cval) ->
+negotiate_cap(cap_server_sdu,_Val,Cval) ->
     {cap_server_sdu,Cval};
-negotiate_cap(cap_cpushf,false,Cval) ->
+negotiate_cap(cap_cpushf,false,_Cval) ->
     {cap_cpushf,false};
-negotiate_cap(cap_cpushf,Val,Cval) ->
+negotiate_cap(cap_cpushf,Val,_Cval) ->
     {cap_cpushf,Val};
-negotiate_cap(cap_pushf,false,Cval) ->
+negotiate_cap(cap_pushf,false,_Cval) ->
     {cap_pushf,false};
-negotiate_cap(cap_pushf,Val,Cval) ->
+negotiate_cap(cap_pushf,Val,_Cval) ->
     {cap_pushf,Val};
-negotiate_cap(cap_sresumef,false,Cval) ->
+negotiate_cap(cap_sresumef,false,_Cval) ->
     {cap_sresumef,false};
-negotiate_cap(cap_sresumef,Val,Cval) ->
+negotiate_cap(cap_sresumef,Val,_Cval) ->
     {cap_sresumef,Val};
-negotiate_cap(cap_ackhead,false,Cval) ->
+negotiate_cap(cap_ackhead,false,_Cval) ->
     {cap_ackhead,false};
-negotiate_cap(cap_ackhead,Val,Cval) ->
+negotiate_cap(cap_ackhead,Val,_Cval) ->
     {cap_ackhead,Val};
 negotiate_cap(cap_mom,Val,Cval) when Val<Cval ->
     {cap_mom,Val};
-negotiate_cap(cap_mom,Val,Cval) ->
+negotiate_cap(cap_mom,_Val,Cval) ->
     {cap_mom,Cval};
 negotiate_cap(cap_mop,Val,Cval) when Val<Cval ->
     {cap_mop,Val};
-negotiate_cap(cap_mop,Val,Cval) ->
+negotiate_cap(cap_mop,_Val,Cval) ->
     {cap_mop,Cval};
 negotiate_cap(cap_em,Val,Cval) ->
     {cap_em,intersection(Val,Cval)};
@@ -747,9 +749,9 @@ negotiate_cap(cap_hcp,Val,Cval) ->
     {cap_hcp,intersection(Val,Cval)};
 negotiate_cap(cap_aliases,Val,Cval) ->
     {cap_aliases,intersection(Val,Cval)};
-negotiate_cap(Userdef,Val,Cval) when list(Val),list(Cval) ->
+negotiate_cap(Userdef,Val,Cval) when is_list(Val),is_list(Cval) ->
     {Userdef,intersection(Val,Cval)};
-negotiate_cap(Userdef,Val,Cval) ->
+negotiate_cap(Userdef,Val,_Cval) ->
     {Userdef,Val}.
 
 %% Return all tuples common between List1 and List2 
@@ -757,7 +759,7 @@ intersection(List1,List2) ->
     L1=intersection2(List1,List2),
     intersection2(List2,L1).
 
-intersection2([],List2) ->
+intersection2([],_List2) ->
     [];
 intersection2([Val|List1],List2) ->
     case lists:member(Val,List2) of
@@ -769,9 +771,9 @@ intersection2([Val|List1],List2) ->
 
 %% -----------------------------------------------------------------------------
 %% Remove any caps equal to the known already, or with undefined value
-remove_known_caps([],Default) ->
+remove_known_caps([],_Default) ->
     [];
-remove_known_caps([{Key,undef}|AppCaps],Default) ->
+remove_known_caps([{_Key,undef}|AppCaps],Default) ->
     remove_known_caps(AppCaps,Default);
 remove_known_caps([Cap|AppCaps],Default) ->
     case lists:member(Cap,Default) of
@@ -790,11 +792,11 @@ remove_known_caps([Cap|AppCaps],Default) ->
 
 make_uniform_addr({{Sa,Sp,Da,Dp},Bearer}) when Bearer==?ANY_ANY_IPv4 ->
     NSa=if
-	    list(Sa) ->	get_addr(Sa);
+	    is_list(Sa) ->	get_addr(Sa);
 	    true -> Sa
 	end,
     NDa=if
-	    list(Da) ->	get_addr(Da);
+	    is_list(Da) ->	get_addr(Da);
 	    true -> Da
 	end,    
     {{NSa,Sp,NDa,Dp},Bearer};
@@ -811,7 +813,7 @@ get_addr(Addr) ->
 		    hd(Hostent#hostent.h_addr_list);
 		A1 -> throw(A1)
 	    end;
-	A ->
+	_A ->
 	    case inet:gethostbyname(Addr) of
 		{ok,Hostent} ->
 		    hd(Hostent#hostent.h_addr_list);

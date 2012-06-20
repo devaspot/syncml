@@ -277,7 +277,7 @@ encode_attributes([#xmlAttribute{name=K,value=V}|Attrs],US) ->
 
 encode_attribute_start(K,V) ->
     case lists:keysearch(K,1,?WML_ATTRIBUTE_START_TOKENS_ENC) of
-    {value,{_,Code}} when integer(Code) ->
+    {value,{_,Code}} when is_integer(Code) ->
         {V,[Code]};
     {value,{_,Func}} ->
         apply(?MODULE,Func,[V])
@@ -462,7 +462,7 @@ encode_text1([],[],EncV,US) ->
 encode_text1([],Acc,EncV1,US) ->
     {US2,EncV2}=encode_string(US,lists:reverse(Acc)),
     {US2,EncV1++EncV2};
-encode_text1([[Entity]|Rest],Acc,EncV,US) ->
+encode_text1([[Entity]|Rest],Acc,_EncV,US) ->
     {US2,EncV1}=encode_string(US,lists:reverse(Acc)),
     encode_text1(Rest,[],EncV1++encode_numeric_entity(Entity,US2),US2);
 encode_text1([H|T],Acc,EncV,US) ->
@@ -474,7 +474,7 @@ encode_text2([],[],EncV,US) ->
 encode_text2([],Acc,EncV1,US) ->
     {US2,EncV2}=encode_string(US,lists:reverse(Acc)),
     {US2,EncV1++EncV2};
-encode_text2([[Entity]|Rest],Acc,EncV,US) ->
+encode_text2([[Entity]|Rest],Acc,_EncV,US) ->
     {US2,EncV1}=encode_string(US,lists:reverse(Acc)),
     encode_text2(Rest,[],EncV1++encode_numeric_entity(Entity,US2),US2);
 encode_text2([$$,H|T],Acc,EncV1,US) ->
@@ -568,16 +568,16 @@ encode_variable(US,'unesc',Var) ->
     encode_variable2(US,erlang:length(Var),Var,?WBXML_EXT_I_2,?WBXML_EXT_T_2).
 
 
-encode_variable2(US=#wbxml_info{str_table=StrTbl},Len,Var,Ext_I,Ext_T)
+encode_variable2(US=#wbxml_info{str_table=StrTbl},Len,Var,_Ext_I,Ext_T)
   when 5<Len,Len<50 ->
     {StrTbl2,Index}=wbxml:add_string(StrTbl,Var),
     {US#wbxml_info{str_table=StrTbl2},[Ext_T]++wap_common:pack_uintvar(Index)};
-encode_variable2(US=#wbxml_info{charset=Charset},LenVar,Var,Ext_I,Ext_T) ->
+encode_variable2(US=#wbxml_info{charset=Charset},_LenVar,Var,Ext_I,_Ext_T) ->
     Str=ucs:from_unicode(Var,Charset),
     {US, [Ext_I]++Str++[0]}.
 
 
-encode_numeric_entity(Int,#wbxml_info{charset=Charset}) ->
+encode_numeric_entity(Int,#wbxml_info{charset=_Charset}) ->
     [?WBXML_ENTITY]++wap_common:pack_uintvar(Int).
 %    case ucs:is_incharset(Int,Charset) of
 %   false ->

@@ -23,7 +23,7 @@
 	]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wap_stack.hrl").
 -include("wdp.hrl").
@@ -121,6 +121,9 @@ terminate(Reason, State) ->
     ets:delete(State#state.config_db),
     ?trace("Stopped WAP stack database:~p",[Reason],terminate).
 
+
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 %% =============================================================================
 %% Maintenance
 handle_call(stop, _, Tab) ->
@@ -142,13 +145,13 @@ handle_call({lookup_config,ConfigKey},_, State) ->
 
 %% .............................................................................
 %% Stack Database
-handle_call({insert_stack,Sref,Type,Stack},_, State) when atom(Type),
-							  tuple(Stack) ->
+handle_call({insert_stack,Sref,Type,Stack},_, State) when is_atom(Type),
+							  is_tuple(Stack) ->
     ets:insert(State#state.stack_db,{Sref,{Type,Stack}}),
     {reply,ok,State};
 handle_call({update_stack,Sref,{Comp,Pid}},_, State) ->
     Ans=case ets:lookup(State#state.stack_db,Sref) of
-	    [{_,{wspCL_wdp,{Wsp,Wdp}}}] ->
+	    [{_,{wspCL_wdp,{Wsp,_Wdp}}}] ->
 		Stack=case Comp of
 			  wdp -> {Wsp,Pid}
 		      end,
@@ -173,7 +176,7 @@ handle_call({update_stack,Sref,{Comp,Pid}},_, State) ->
 		      end,
 		ets:insert(State#state.stack_db,
 			   {Sref,{wspCO_wtp_wtls_wdp,Stack}});
-	    Error ->
+	    _Error ->
 		{error,no_valid_stack}
 	end,
     {reply,Ans,State};
@@ -258,7 +261,7 @@ handle_call({remove_all_app,Sref},_,State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_cast(Msg, State) ->
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -267,7 +270,7 @@ handle_cast(Msg, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 
@@ -284,7 +287,7 @@ check_stack_applist(AppRef,[{StRef,AppList}|L]) ->
 
 check_applist(_,_,[]) ->
     not_found;
-check_applist(AppRef,StRef,[{Tpar,{AppRef,_}}|AppList]) ->
+check_applist(AppRef,StRef,[{Tpar,{AppRef,_}}|_AppList]) ->
     {ok,{StRef,Tpar}};
 check_applist(AppRef,StRef,[_|AppList]) ->
     check_applist(AppRef,StRef,AppList).
@@ -294,7 +297,7 @@ check_applist(AppRef,StRef,[_|AppList]) ->
 read_configs(Config_db) ->
     read_config(?CONFIG_KEYS,Config_db).
 
-read_config([],Config_db) ->
+read_config([],_Config_db) ->
     ok;
 read_config([{ConfigKey,Type,Default}|Rest],Config_db) ->
     case application:get_env(wap_stack,ConfigKey) of
@@ -331,7 +334,7 @@ print_configs(Config_db) ->
     io:format("Configuration data:~n",[]),
     print_config(?CONFIG_KEYS,Config_db).
 
-print_config([],Config_db) ->
+print_config([],_Config_db) ->
     ok;
 print_config([{ConfigKey,_,_}|Rest],Config_db) ->
     case ets:lookup(Config_db,ConfigKey) of

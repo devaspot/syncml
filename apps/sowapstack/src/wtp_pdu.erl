@@ -88,14 +88,14 @@ encode_TPI2([{psn_tpi,PacketSeqNum}|Rest]) ->
     (encode_TPI2(Rest))/binary>>.
 
 
-decode_pdu(List) when list(List) ->
+decode_pdu(List) when is_list(List) ->
     decode_pdu(list_to_binary(List));
 
 decode_pdu(<<?Concatenated_Indicator:8,0:1,Length:7,Content/binary>>) ->
     PDUlist=decode_concatenated_pdu(Length,Content),
     {concatenated,PDUlist};
 decode_pdu(<<CON:1,?Invoke:4,GTR:1,TTR:1,RID:1,TID:16,
-	   Version:2,TIDNew:1,Uack:1,RES:2,TCL:2,Content/binary>>) ->
+	   Version:2,TIDNew:1,Uack:1,_RES:2,TCL:2,Content/binary>>) ->
     {Data,TPIList}=decode_pdutpi(CON,Content),
     #invoke_pdu{gtr=GTR,ttr=TTR,rid=RID,tid=TID,version=Version,tidnew=TIDNew,
 		uack=Uack,tcl=TCL,tpilist=TPIList,data=Data};
@@ -103,7 +103,7 @@ decode_pdu(<<CON:1,?Result:4,GTR:1,TTR:1,RID:1,TID:16,
 	   Content/binary>>) ->
     {Data,TPIList}=decode_pdutpi(CON,Content),
     #result_pdu{gtr=GTR,ttr=TTR,rid=RID,tid=TID,tpilist=TPIList,data=Data};
-decode_pdu(<<CON:1,?Ack:4,TIDver:1,RES:1,RID:1,TID:16,Content/binary>>) ->
+decode_pdu(<<CON:1,?Ack:4,TIDver:1,_RES:1,RID:1,TID:16,Content/binary>>) ->
     {<<>>,TPIList}=decode_pdutpi(CON,Content),
     #ack_pdu{tidver=TIDver,rid=RID,tid=TID,tpilist=TPIList};
 decode_pdu(<<CON:1,?Abort:4,AbortType:3,TID:16,AbortReason:8,Content/binary>>)->
@@ -119,7 +119,7 @@ decode_pdu(<<CON:1,?SegResult:4,GTR:1,TTR:1,RID:1,TID:16,
     {Segment,TPIList}=decode_pdutpi(CON,Content),
     #segresult_pdu{gtr=GTR,ttr=TTR,rid=RID,tid=TID,psn=PacketSeqNum,
 		    tpilist=TPIList,segment=Segment};
-decode_pdu(<<CON:1,?Nack:4,RES:2,RID:1,TID:16,
+decode_pdu(<<CON:1,?Nack:4,_RES:2,RID:1,TID:16,
 	   NumMissingPacket:8,Content/binary>>) ->
     {BinNumList,Content2}=split_binary(Content,NumMissingPacket),
     {<<>>,TPIList}=decode_pdutpi(CON,Content2),
@@ -154,34 +154,34 @@ decodeTPI2(?TRUE,
 decodeTPI2(?TRUE,
 	   <<CON:1,?TpiOption:4,?FALSE:1,Length:2,OptionIdentity:8,
 	   Content/binary>>,Out) ->
-    {Value,Content2}=split_binary(Content,Length-1),
+    {Value,_Content2}=split_binary(Content,Length-1),
     decodeTPI2(CON,Content,[#option_tpi{optionTPI=OptionIdentity,
 					value=Value}|Out]);
 decodeTPI2(?TRUE,
 	   <<CON:1,?TpiInfo:4,?FALSE:1,Length:2,Content/binary>>,Out) ->
-    {Info,Content2}=split_binary(Content,Length),
+    {Info,_Content2}=split_binary(Content,Length),
     decodeTPI2(CON,Content,[{info_tpi,Info}|Out]);
 decodeTPI2(?TRUE,
 	   <<CON:1,?TpiPSN:4,?FALSE:1,1:2,PacketSeqNum:8,
 	   Content/binary>>,Out) ->
     decodeTPI2(CON,Content,[{psn_tpi,PacketSeqNum}|Out]);
-decodeTPI2(?TRUE,<<CON:1,Identity:4,?FALSE:1,Length:2,
-	   Content/binary>>,Out) ->
+decodeTPI2(?TRUE,<<_CON:1,Identity:4,?FALSE:1,Length:2,
+	   Content/binary>>,_Out) ->
     {Content,Code,First}=parse_tpi(Identity,Length,Content),
     {error,#error_tpi{code=Code,badTPI=Identity,first=First}};
-decodeTPI2(?TRUE,<<CON:1,Identity:4,?TRUE:1,RES:2,Length:8,
-	   Content/binary>>,Out) ->
-    {Content2,Code,First}=parse_tpi(Identity,Length,Content),
+decodeTPI2(?TRUE,<<_CON:1,Identity:4,?TRUE:1,_RES:2,Length:8,
+	   Content/binary>>,_Out) ->
+    {_Content2,Code,First}=parse_tpi(Identity,Length,Content),
     {error,#error_tpi{code=Code,badTPI=Identity,first=First}}.
 
 
 parse_tpi(Identity,Length,Content) ->
     case lists:member(Identity,[?TpiError,?TpiInfo,?TpiOption,?TpiPSN]) of
 	true ->
-	    {Value,Content2}=split_binary(Content,Length),
+	    {_Value,Content2}=split_binary(Content,Length),
 	    {Content2,?KNOWN_TPI,[]};
 	false ->
-	    {Value,<<First:8,Content2/binary>>}=split_binary(Content,Length),
+	    {_Value,<<First:8,Content2/binary>>}=split_binary(Content,Length),
 	    {Content2,?UNKNOWN_TPI,First}
     end.
 
@@ -225,7 +225,7 @@ decode_abort_reason(A) ->                       {illegal_error_code,A}.
 
 %%% ============================================================================
 %% Pretty prints a decoded WTP PDU
-pp_tpdu(List) when list(List) ->
+pp_tpdu(List) when is_list(List) ->
     {ok,Spdu}=pp_tpdu2(list_to_binary(List)),
     wsp_pdu:pp_spdu(Spdu);
 pp_tpdu(BinPdu) ->
@@ -233,7 +233,7 @@ pp_tpdu(BinPdu) ->
     wsp_pdu:pp_spdu(Spdu).
 
 pp_tpdu2(<<CON:1,?Invoke:4,GTR:1,TTR:1,RID:1,TID:16,
-	   Version:2,TIDNew:1,Uack:1,RES:2,TCL:2,Content/binary>>) ->
+	   Version:2,TIDNew:1,Uack:1,_RES:2,TCL:2,Content/binary>>) ->
     io:format("WTP Invoke: Tid=~p GTR:~p  TTR:~p  RID:~p~n",[TID,GTR,TTR,RID]),
     io:format("        Version: ~p~n",[Version]),
     io:format("        TidNew:~p  Uack:~p  TCL: ~p~n",[TIDNew,Uack,TCL]),
@@ -245,9 +245,9 @@ pp_tpdu2(<<CON:1,?Result:4,GTR:1,TTR:1,RID:1,TID:16,Content/binary>>) ->
     {Data,TPIList}=decode_pdutpi(CON,Content),
     pp_tpilist(TPIList),
     {ok,Data};
-pp_tpdu2(<<CON:1,?Ack:4,TIDver:1,RES:1,RID:1,TID:16,Content/binary>>) ->
+pp_tpdu2(<<CON:1,?Ack:4,TIDver:1,_RES:1,RID:1,TID:16,Content/binary>>) ->
     io:format("WTP Ack: Tid=~p Tve/Tok=~p  RID=~p~n",[TID,TIDver,RID]),
-    {Data,TPIList}=decode_pdutpi(CON,Content),
+    {_Data,TPIList}=decode_pdutpi(CON,Content),
     pp_tpilist(TPIList),
     {ok,[]};
 pp_tpdu2(<<CON:1,?Abort:4,AbortType:3,TID:16,AbortReason:8,Content/binary>>) ->
@@ -257,7 +257,7 @@ pp_tpdu2(<<CON:1,?Abort:4,AbortType:3,TID:16,AbortReason:8,Content/binary>>) ->
        end,
     io:format("WTP Abort: Tid=~p Reason=~p,~p~n",
 	      [TID,AT,decode_abort_reason(AT,AbortReason)]),
-    {Data,TPIList}=decode_pdutpi(CON,Content),
+    {_Data,TPIList}=decode_pdutpi(CON,Content),
     pp_tpilist(TPIList),
     {ok,[]};
 pp_tpdu2(<<CON:1,?SegInvoke:4,GTR:1,TTR:1,RID:1,TID:16,
@@ -276,12 +276,12 @@ pp_tpdu2(<<CON:1,?SegResult:4,GTR:1,TTR:1,RID:1,TID:16,
     {Segment,TPIList}=decode_pdutpi(CON,Content),
     pp_tpilist(TPIList),
     {ok,Segment};
-pp_tpdu2(<<CON:1,?Nack:4,RES:2,RID:1,TID:16,
+pp_tpdu2(<<CON:1,?Nack:4,_RES:2,RID:1,TID:16,
 	   NumMissingPacket:8,Content/binary>>) ->
-    {BinNumList,Content2}=split_binary(Content,NumMissingPacket),
+    {BinNumList,_Content2}=split_binary(Content,NumMissingPacket),
     io:format("WTP Nack: Tid=~p RID=~p NumMissPackets=~p Numlist=~p~n",
 	      [TID,RID,NumMissingPacket,BinNumList]),
-    {Data,TPIList}=decode_pdutpi(CON,Content),
+    {_Data,TPIList}=decode_pdutpi(CON,Content),
     pp_tpilist(TPIList),
     {ok,[]};
 pp_tpdu2(B) ->

@@ -61,7 +61,7 @@
 %%                the session. Set to true if the session is setup already
 %% capabil (list) - Negotiated capabilities valid to the whole session
 %% reqlist (list) - list of pending requests for this session
--record(entry,{setup_pid,capabil,reqlist}).
+%-record(entry,{setup_pid,capabil,reqlist}).
 
 %-------------------------------------------------------------------------------
 % Interface
@@ -144,7 +144,7 @@ init(_) ->
 stop(Serverref) ->
     gen_server:call(Serverref,stop).
 
-terminate(Reason,State) ->
+terminate(Reason,_State) ->
     ?trace("Stopped WSP database:~p",[Reason],terminate).
 
 %% =============================================================================
@@ -246,7 +246,7 @@ handle_call(next_sid,_,Tab) ->
 	    Tab#state.sid<65536 -> Tab#state.sid+1;
 	    true -> 0
 	end,
-    Tab1=Tab#state{sid=Sid},
+    _Tab1=Tab#state{sid=Sid},
     {reply,Sid,Tab};
 
 %% For mgmt interface
@@ -277,7 +277,7 @@ handle_call(active_pushes,_, Tab) ->
       end,
     io:format("Pending Push: ~p ~n",[L]),
     {reply,ok,Tab};
-handle_call({session_info,Sref},_, Tab) ->
+handle_call({session_info,_Sref},_, Tab) ->
     L=case ets:tab2list(Tab#state.sesdb) of
 	  [] ->
 	      "Not active";
@@ -341,7 +341,7 @@ handle_call({release_method,Ref},_, Tab) ->
     end;
 
 %% Get the current database - both sides
-handle_call({get_all_methods,Sref},_, Tab) ->
+handle_call({get_all_methods,_Sref},_, Tab) ->
     {reply,ets:tab2list(Tab#state.reqdb),Tab};
 
 %% =============================================================================
@@ -402,7 +402,7 @@ handle_call({insert_appref,AppRef,App},_, Tab) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_cast(Msg, State) ->
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -411,7 +411,7 @@ handle_cast(Msg, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -419,6 +419,6 @@ handle_info(Info, State) ->
 %% Purpose: Convert process state when code is changed
 %% Returns: {ok, NewState}
 %%----------------------------------------------------------------------
-code_change(OldVsn, State, Extra) ->
+code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 

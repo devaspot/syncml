@@ -41,7 +41,7 @@
 %%          {ok, Pid, State} |
 %%          {error, Reason}   
 %%--------------------------------------------------------------------
-start(Type, StartArgs) ->
+start(_Type, StartArgs) ->
     case ucs_sup:start_link(StartArgs) of
 	{ok, Pid} -> 
 	    {ok, Pid};
@@ -53,7 +53,7 @@ start(Type, StartArgs) ->
 %% Func: stop/1
 %% Returns: any 
 %%--------------------------------------------------------------------
-stop(State) ->
+stop(_State) ->
     ok.
 
 %%====================================================================

@@ -9,9 +9,9 @@
 
 -define(MAX_LINE, 75).
 
-pack(List) when list(List) ->
+pack(List) when is_list(List) ->
     pack(list_to_binary(List));
-pack(Bin) when binary(Bin) ->
+pack(Bin) when is_binary(Bin) ->
     acc_pack(Bin, []).
 
 acc_pack(<<Bin:?MAX_LINE/binary, T/binary>>, Acc) ->
@@ -19,9 +19,9 @@ acc_pack(<<Bin:?MAX_LINE/binary, T/binary>>, Acc) ->
 acc_pack(Bin, Acc) ->
     list_to_binary([Acc,enc(Bin),$\n]).
 
-unpack(List) when list(List) ->
+unpack(List) when is_list(List) ->
     binary_to_list(list_to_binary(dec(list_to_binary(List))));
-unpack(Bin) when binary(Bin) ->
+unpack(Bin) when is_binary(Bin) ->
     list_to_binary(dec(Bin)).
 
 %% Base-64 encoding: take 6 bits at a time from the head of the binary
@@ -58,9 +58,9 @@ dec(Bin) ->
 
 dec(0, Bin, List, Acc) ->
     dec(512, Bin, List, [list_to_binary(Acc)]);
-dec(N, <<>>, [], Acc) -> Acc;
-dec(N, <<>>, [R,Q,P], Acc) -> [Acc|<<P:6, Q:6, (R bsr 2):4>>];
-dec(N, <<>>, [Q,P], Acc) -> [Acc|<<P:6, (Q bsr 4):2>>];
+dec(_N, <<>>, [], Acc) -> Acc;
+dec(_N, <<>>, [R,Q,P], Acc) -> [Acc|<<P:6, Q:6, (R bsr 2):4>>];
+dec(_N, <<>>, [Q,P], Acc) -> [Acc|<<P:6, (Q bsr 4):2>>];
 dec(N, Bin, [S,R,Q,P], Acc) ->
     dec(N-1, Bin, [], [Acc|<<P:6, Q:6, R:6, S:6>>]);
 dec(N, <<A:8, T/binary>>, List, Acc) ->

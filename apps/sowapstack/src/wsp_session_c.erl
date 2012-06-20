@@ -19,7 +19,7 @@
 	]).
 
 %% Internal gen_fsm callbacks
--export([init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3]).
+-export([init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3, code_change/4]).
 
 %% Internal gen_fsm states
 -export([
@@ -94,10 +94,12 @@ init({WTPman,Sdb,Tpar,Headers,Cap,EncodingVersion}) ->
 	    {stop,normal}
     end.
 	    
-terminate(Reason,StateName,State) ->
+terminate(Reason,_StateName,State) ->
     ?trace("WSP session (Dest=~w) stopped:~w",
 	   [State#state.tpar,Reason],terminate).
 
+code_change(_OldVsn, StateName, State, _Extra)->
+    {ok, StateName, State}.
 
 %%% ----------------------------------------------------------------------------
 %%% The Client Session state machine
@@ -129,7 +131,7 @@ connecting(pseudo_suspend,_,State) ->
     handle_abort(?SUSPEND,State),
     s_disconnect_ind(?SUSPEND,State),
     next_state_null(State,ok);
-connecting(A,_,State) ->
+connecting(_A,_,State) ->
     {reply, {error,invalid_command},connecting,State}.
 
 connecting({tr_invoke_ind,WTPres,{Class,_,_}},State) ->
@@ -166,7 +168,7 @@ connecting({tr_result_ind,WTPini,BinPdu},State) ->
 	    handle_abort(?CONNECTERR,State),
 	    s_disconnect_ind({reply,{Status,Headers,CT,Data}},State),
 	    next_state_null(State);
-	Other ->
+	_Other ->
 	    tr_abort_req(WTPini,?WSP_PROTOERR),
 	    handle_abort(?CONNECTERR,State),
 	    s_disconnect_ind(?WSP_PROTOERR,State),
@@ -174,7 +176,7 @@ connecting({tr_result_ind,WTPini,BinPdu},State) ->
     end;
 connecting({tr_invoke_cnf,_,_},State) ->
     {next_state, connecting, State};
-connecting({tr_abort_ind,WTP,Info},State) ->
+connecting({tr_abort_ind,_WTP,Info},State) ->
     ?debug("Got abort ~p",[Info],connecting),
     handle_abort(?CONNECTERR,State),
     s_disconnect_ind(Info,State),
@@ -246,7 +248,7 @@ connected({resume_req,NewTpar},_,State) ->
 	Error ->
 	    {reply,Error, connected, State}
     end;
-connected(A,_,State) ->
+connected(_A,_,State) ->
     {reply, {error,invalid_command},connected,State}.
 
 connected({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
@@ -256,7 +258,7 @@ connected({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
 	{error,mruexceeded} ->
 	    tr_abort_req(WTPres,?MRUEXCEEDED),
 	    {next_state, connected, State};
-	{?CLASS0,Pdu} when record(Pdu,disconnect) ->
+	{?CLASS0,Pdu} when is_record(Pdu,disconnect) ->
 	    handle_abort(?DISCONNECT,State),
 	    s_disconnect_ind(?DISCONNECT,State),
 	    next_state_null(State);
@@ -268,7 +270,7 @@ connected({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
 		    ok
 	    end,
 	    {next_state, connected, State};
-	{?CLASS1,Pdu} when record(Pdu,push),Pdu#push.type==confirmed_push ->
+	{?CLASS1,Pdu} when is_record(Pdu,push),Pdu#push.type==confirmed_push ->
 	    S=case ((State#state.env)#env.cap)#cap.cpushf of
 		  true ->
 		      catch state_null_push(WTPres,Pdu,State);
@@ -321,7 +323,7 @@ suspended({resume_req,NewTpar},_,State) ->
 	Error ->
 	    {reply,Error, suspended, State}
     end;
-suspended(A,_,State) ->
+suspended(_A,_,State) ->
     {reply, {error,invalid_command},suspended,State}.
 
 
@@ -332,11 +334,11 @@ suspended({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
 	{error,mruexceeded} ->
 	    tr_abort_req(WTPres,?MRUEXCEEDED),
 	    {next_state, suspended, State};
-	{?CLASS0,Pdu} when record(Pdu,disconnect) ->
+	{?CLASS0,Pdu} when is_record(Pdu,disconnect) ->
 	    handle_abort(?DISCONNECT,State),
 	    s_disconnect_ind(?DISCONNECT,State),
 	    next_state_null(State);
-	{?CLASS1,Pdu} when record(Pdu,push),Pdu#push.type==confirmed_push ->
+	{?CLASS1,Pdu} when is_record(Pdu,push),Pdu#push.type==confirmed_push ->
 	    S=case ((State#state.env)#env.cap)#cap.cpushf of
 		  true ->
 		      catch state_null_push(WTPres,Pdu,State);
@@ -391,7 +393,7 @@ resuming(pseudo_suspend,_,State) ->
     handle_abort(?SUSPEND,State),
     s_disconnect_ind(?SUSPEND,State),
     {reply,ok, suspended, State};
-resuming(A,_,State) ->
+resuming(_A,_,State) ->
     {reply, {error,invalid_command},resuming,State}.
 
 resuming({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
@@ -401,13 +403,13 @@ resuming({tr_invoke_ind,WTPres,{Class,_,BinPdu}},State) ->
 	{error,mruexceeded} ->
 	    tr_abort_req(WTPres,?MRUEXCEEDED),
 	    {next_state, resuming, State};
-	{?CLASS0,Pdu} when record(Pdu,disconnect) ->
+	{?CLASS0,Pdu} when is_record(Pdu,disconnect) ->
 	    WTPini=State#state.lastreq, % The Resume Transaction
 	    tr_abort_req(WTPini,?DISCONNECT),
 	    handle_abort(?DISCONNECT,State),
 	    s_disconnect_ind(?DISCONNECT,State),
 	    next_state_null(State);
-	{?CLASS1,Pdu} when record(Pdu,push),Pdu#push.type==confirmed_push ->
+	{?CLASS1,Pdu} when is_record(Pdu,push),Pdu#push.type==confirmed_push ->
 	    tr_abort_req(WTPres,?WSP_PROTOERR),
 	    {next_state, resuming, State};
 	Other ->
@@ -433,15 +435,15 @@ resuming({tr_result_ind,WTPini,BinPdu},State) ->
 	    handle_abort(?DISCONNECT,State),
 	    s_disconnect_ind({reply,{Status,Headers,CT,Data}},State),
 	    next_state_null(State);
-	Other ->
+	_Other ->
 	    tr_abort_req(WTPini,?WSP_PROTOERR),
 	    handle_abort(?SUSPEND,State),
 	    s_suspend_ind(?WSP_PROTOERR,State),
 	    {next_state, suspended, State}
     end;
-resuming({tr_invoke_cnf,WTPini,ExitInfo},State) ->
+resuming({tr_invoke_cnf,_WTPini,_ExitInfo},State) ->
     {next_state, resuming, State};
-resuming({tr_abort_ind,WTPini,{AbortType,AbortReason}},State) ->
+resuming({tr_abort_ind,_WTPini,{_AbortType,AbortReason}},State) ->
     if
 	AbortReason==?DISCONNECT ->
 	    handle_abort(?DISCONNECT,State),
@@ -467,7 +469,7 @@ handle_abort(Sdb,Sref,Reason) ->
     L=wsp_db:get_all_methods(Sdb,Sref),
     abort_methods(L,Reason).
 
-abort_methods([],Reason) ->
+abort_methods([],_Reason) ->
     ok;
 abort_methods([{_,{WSPmet,_}}|L],Reason) ->
     ?debug("Aborting ~p ~p",[WSPmet,Reason],abort_methods),
@@ -487,7 +489,7 @@ state_null_method(Method,HTTPCont,S,SName) ->
     Pdu=wsp_man:create_method_pdu(Method,HTTPCont),
     case wsp_method_c:start_link({Pdu,S#state.env,
 				  S#state.wtp,S#state.tpar,S#state.sdb}) of
-	WSPmet when pid(WSPmet) ->
+	WSPmet when is_pid(WSPmet) ->
 	    {reply,{ok,WSPmet},SName,S#state{n_methods=S#state.n_methods+1}};
 	{error,Reason} ->
 	    ?warning("Can't start WSP client method, got {error,~p}",
@@ -509,7 +511,7 @@ state_null_push(WTPres,Pdu,S) ->
     end,
     case wsp_push_c:start_link({Pdu,S#state.env,
 				WTPres,S#state.tpar,S#state.sdb}) of
-	WSPpus when pid(WSPpus) ->
+	WSPpus when is_pid(WSPpus) ->
 	    s_confirmed_push_ind({Pdu#push.headers,
 				  Pdu#push.contenttype,
 				  Pdu#push.data},WSPpus,S),
@@ -541,7 +543,7 @@ handle_event(remove_push, StateName, State) ->
 %%	    {stop, Reason, NewStateData}			  |
 %%	    {stop, Reason, Reply, NewStateData}			   
 %%----------------------------------------------------------------------
-handle_sync_event(Event, From, StateName, StateData) ->
+handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
 
@@ -551,7 +553,7 @@ handle_sync_event(Event, From, StateName, StateData) ->
 %%	    {next_state, NextStateName, NextStateData, Timeout} |
 %%	    {stop, Reason, NewStateData}			 
 %%----------------------------------------------------------------------
-handle_info(Reason, StateName, State) ->
+handle_info(_Reason, StateName, State) ->
     {next_state, StateName, State}.
 
 
@@ -570,7 +572,7 @@ next_state_null(State) ->
     wsp_db:remove_session(State#state.sdb,State#state.tpar),
     {stop,normal,State}.
 
-next_state_null(State,Reply) ->
+next_state_null(State,_Reply) ->
     wsp_db:remove_session(State#state.sdb,State#state.tpar),
     {stop,normal,ok,State}.
 

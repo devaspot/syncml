@@ -19,7 +19,7 @@
 
 
 %% Internal gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wsp.hrl").
 -include("wspif.hrl").
@@ -50,14 +50,14 @@ init({WSPses,{Pdu,Env,WTPman,Tpar,Sdb}}) ->
 	    wsp_db:add_push(Sdb,{Tpar,WTPini},{self(),?ConfirmedPush}),
 	    ?trace("WSP push started ok",[],init),
 	    {ok,#state{wtp=WTPini,wsp=WSPses,sdb=Sdb,tpar=Tpar,env=Env }};
-	Error ->
+	_Error ->
 	    {stop,normal}
     end.
 
 stop(WSPpid) ->
     gen_server:call(WSPpid,stop).
 
-terminate(Reason,State) ->
+terminate(_Reason,_State) ->
     ok.
 
 
@@ -104,7 +104,7 @@ handle_cast({tr_abort_ind,Reason},State) ->
 	    push_abort_ind(Reason,State),
 	    next_state_null(State)
     end;
-handle_cast(A,State) ->
+handle_cast(_A,State) ->
     tr_abort_req(?WSP_PROTOERR,State),
     next_state_null(State).
 
@@ -129,8 +129,12 @@ handle_call(stop, _, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
+
+
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 
 next_state_null(State) ->
     wsp_db:remove_push(State#state.sdb,{State#state.tpar,State#state.wtp}),

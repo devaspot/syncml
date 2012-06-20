@@ -29,7 +29,7 @@
 %%          {ok, Pid, State} |
 %%          {error, Reason}   
 %%----------------------------------------------------------------------
-start(Type,StartArgs) ->
+start(_Type,StartArgs) ->
     ?trace("Starting WAP stack application:~p",[StartArgs],start),
     case wap_stack_man_sup:start_link(StartArgs) of
 	{ok,Pid} ->
@@ -43,7 +43,7 @@ start(Type,StartArgs) ->
 %% Func: stop/1
 %% Returns: any 
 %%----------------------------------------------------------------------
-stop(State) ->
+stop(_State) ->
     ?trace("WAP Stack stopped",[],stop).
 
 %%%----------------------------------------------------------------------

@@ -10,6 +10,10 @@
 	 invoke_res/3,result_res/2,
 	 exception/2]).
 
+-export([invoke_ind/3, result_ind/3, invoke_cnf/3]).
+
+-export([invoke_ind/6, abort_ind/3, result_cnf/3]).
+
 %% Downwards (for WSP to use)
 invoke_req(WTPman,App,Tpar,Tcl,UAck,Data) ->
     ?debug("WTPini:~w",[WTPman],invoke_req),

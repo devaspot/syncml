@@ -174,7 +174,7 @@ encode(Content,_Accept,ExtCharset,DTDRules) ->
        end,
     Event=fun(#xmerl_event{data=Data}, S) ->
           case Data of
-              Decl when record(Decl,xmlDecl) ->
+              Decl when is_record(Decl,xmlDecl) ->
               US=xmerl_scan:user_state(S),
               US1=US#user_state{xml=Decl},
               xmerl_scan:user_state(US1,S);
@@ -293,7 +293,7 @@ decode(Content) ->
     Module=decode_cb_module(PIcode,StrTbl),
     io:format("CallbackModule: ~w~n",[Module]),
     case catch decode_tokens(Content4,StrTbl,Charset,Module) of
-    Body when list(Body) ->
+    Body when is_list(Body) ->
         _PI=decode_PI(PIcode,StrTbl),
         remove_stringtable(StrTbl),
         {ok,Body};
@@ -320,7 +320,7 @@ decode_cb_module(?WBXML_unknown,_) -> wml_11;
 decode_cb_module(?WBXML_syncml_11,_) -> syncml_11;
 decode_cb_module(?WBXML_devinf_11,_) -> devinf_11;
 decode_cb_module(?WBXML_syncml_12,_) -> syncml_11;
-decode_cb_module(?WBXML_devinf_12,_) -> devinf_11;
+%decode_cb_module(?WBXML_devinf_12,_) -> devinf_11;
 decode_cb_module(_,_StrTbl) -> wml_11.
 
 
@@ -457,9 +457,9 @@ decode_PI(?WBXML_syncml_11,_) ->
 decode_PI(?WBXML_devinf_11,_) ->
     "<!DOCTYPE devinf PUBLIC \"-//SYNCML//DTD DevInf 1.1//EN\" \"http://www.syncml.org/docs/devinf_v11_20020215.dtd\">";
 decode_PI(?WBXML_syncml_12,_) ->
-    "<!DOCTYPE syncml PUBLIC \"-//SYNCML//DTD SyncML 1.2//EN\" \"http://www.syncml.org/docs/syncml_represent_v11_20020213.dtd\">";
-decode_PI(?WBXML_devinf_12,_) ->
-    "<!DOCTYPE devinf PUBLIC \"-//SYNCML//DTD DevInf 1.2//EN\" \"http://www.syncml.org/docs/devinf_v11_20020215.dtd\">".
+    "<!DOCTYPE syncml PUBLIC \"-//SYNCML//DTD SyncML 1.2//EN\" \"http://www.syncml.org/docs/syncml_represent_v11_20020213.dtd\">".%;
+%decode_PI(?WBXML_devinf_12,_) ->
+%    "<!DOCTYPE devinf PUBLIC \"-//SYNCML//DTD DevInf 1.2//EN\" \"http://www.syncml.org/docs/devinf_v11_20020215.dtd\">".
 
 
 %%% ============================================================================

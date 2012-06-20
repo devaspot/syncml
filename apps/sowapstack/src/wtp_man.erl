@@ -22,7 +22,7 @@
 	]).
 
 %% Internal gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wtp.hrl").
 -include("wtpif.hrl").
@@ -88,6 +88,8 @@ terminate(Reason,State) ->
     wtp_db:stop(State#state.tdb),
     ?trace("WTP manager stopped:~p",[Reason],terminate).
 
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 %%% ----------------------------------------------------------------------------
 %%% Call back functions
 %%% Management functions
@@ -138,7 +140,7 @@ handle_cast({error_ind,Tpar,Reason},State) ->
 %%	    {noreply, State, Timeout} |
 %%	    {stop, Reason, State}	     (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 
@@ -152,11 +154,11 @@ handle_unitdata_ind(BinPdu,Tpar,State) ->
     case wtp_pdu:decode_pdu(BinPdu) of
 	{concatenated,ConcCont} ->
 	    handle_concatenated(ConcCont,Tpar,State);
-	Pdu when record(Pdu,seginvoke_pdu);record(Pdu,segresult_pdu);
-		 record(Pdu,nack_pdu) ->
+	Pdu when is_record(Pdu,seginvoke_pdu);is_record(Pdu,segresult_pdu);
+		 is_record(Pdu,nack_pdu) ->
 	    handle_segmented(Pdu,Tpar,State);
-	Pdu when record(Pdu,invoke_pdu);record(Pdu,result_pdu);
-		 record(Pdu,ack_pdu);record(Pdu,abort_pdu) ->
+	Pdu when is_record(Pdu,invoke_pdu);is_record(Pdu,result_pdu);
+		 is_record(Pdu,ack_pdu);is_record(Pdu,abort_pdu) ->
 	    handle_single(Pdu,Tpar,State)
     end.
 
@@ -164,11 +166,11 @@ handle_unitdata_ind(BinPdu,Tpar,State) ->
 %%% Parse incoming "concatenated" PDUs from WDP. Parsed packets might be 
 %%% - complete single PDU (handle_single/3) or
 %%% - parts of a segmented PDU (handle_segmented/3)
-handle_concatenated([],Tpar,State) ->
+handle_concatenated([],_Tpar,_State) ->
     ok;
-handle_concatenated([Pdu|Pdulist],Tpar,State) when record(Pdu,seginvoke_pdu);
-						   record(Pdu,segresult_pdu);
-						   record(Pdu,nack_pdu) ->
+handle_concatenated([Pdu|Pdulist],Tpar,State) when is_record(Pdu,seginvoke_pdu);
+						   is_record(Pdu,segresult_pdu);
+						   is_record(Pdu,nack_pdu) ->
     case handle_segmented(Pdu,Tpar,State) of
 	ok -> handle_concatenated(Pdulist,Tpar,State);
 	{error,Reason} -> {error,Reason}
@@ -212,12 +214,12 @@ handle_single(Pdu=#invoke_pdu{gtr=?TRUE,ttr=?TRUE,tid=Tid,tcl=TCL,
 	_ -> % Not segmented, Class 1 or 2 transaction
 	    forward_single(Pdu,Tpar,State)
     end;
-handle_single(Pdu,Tpar,State) when record(Pdu,invoke_pdu)->
+handle_single(Pdu,Tpar,State) when is_record(Pdu,invoke_pdu)->
     handle_segmented(Pdu,Tpar,State);
 handle_single(Pdu=#result_pdu{gtr=?TRUE,ttr=?TRUE},Tpar,State) ->
     %% Not segmented, Class 1 or 2 transaction
     forward_single(Pdu,Tpar,State);
-handle_single(Pdu,Tpar,State) when record(Pdu,result_pdu) ->
+handle_single(Pdu,Tpar,State) when is_record(Pdu,result_pdu) ->
     handle_segmented(Pdu,Tpar,State);
 handle_single(Pdu,Tpar,State) ->
     forward_single(Pdu,Tpar,State).
@@ -226,22 +228,22 @@ handle_single(Pdu,Tpar,State) ->
 %%% FIXME!
 %%% Combine incoming "segmenteded" PDUs from WDP and let handle_single/3 take
 %%% care of each complete single PDU.
-handle_segmented(#invoke_pdu{},Tpar,State) -> % Initial segment
+handle_segmented(#invoke_pdu{},_Tpar,_State) -> % Initial segment
     {error,not_implemented};
-handle_segmented(#result_pdu{},Tpar,State) -> % Initial segment
+handle_segmented(#result_pdu{},_Tpar,_State) -> % Initial segment
     {error,not_implemented};
-handle_segmented(#seginvoke_pdu{},Tpar,State) ->
+handle_segmented(#seginvoke_pdu{},_Tpar,_State) ->
     {error,not_implemented};
-handle_segmented(#segresult_pdu{},Tpar,State) ->
+handle_segmented(#segresult_pdu{},_Tpar,_State) ->
     {error,not_implemented};
-handle_segmented(#nack_pdu{},Tpar,State) ->
+handle_segmented(#nack_pdu{},_Tpar,_State) ->
     {error,not_implemented}.
 
 
 
 %%% Forward a complete, single WTP PDU to the initiator or responder process
 forward_single(Pdu,Tpar,State) ->
-    {ToggledTid,Trtype,BareTid}=extract_tid_values(Pdu),
+    {ToggledTid,Trtype,_BareTid}=extract_tid_values(Pdu),
     case wtp_db:lookup_unidata_tid(State#state.tdb,{Tpar,Trtype,ToggledTid}) of
 	{ok,WTP,Transtype,TidNewSet} ->
 	    case Transtype of
@@ -275,7 +277,7 @@ handle_new_transaction(Pdu,Trtype,Tpar,State) ->
 						   State#state.wsp,
 						   State#state.below),
 		    ok;
-		{error,Reason} -> % (10) Ignore
+		{error,_Reason} -> % (10) Ignore
 		    ?debug("Cannot find idle responder ==> ignoring",[],
 			   handle_new_transaction),
 		    ok
@@ -283,8 +285,8 @@ handle_new_transaction(Pdu,Trtype,Tpar,State) ->
 	#ack_pdu{tidver=?TRUE,tid=Tid} when Trtype==initiator -> % (2) Ignore
 	    abort(?INVALIDTID,Tid,State#state.below,Tpar),
 	    ok;
-	Pdu when record(Pdu,ack_pdu);record(Pdu,nack_pdu);
-		 record(Pdu,result_pdu);record(Pdu,abort_pdu) -> % (3) Ignore
+	Pdu when is_record(Pdu,ack_pdu);is_record(Pdu,nack_pdu);
+		 is_record(Pdu,result_pdu);is_record(Pdu,abort_pdu) -> % (3) Ignore
 	    ok
     end.
 
@@ -299,14 +301,14 @@ get_tid(#ack_pdu{tid=Tid})-> toggle_tid(Tid).
 %% Find an idle responder process, if possible.
 %% (and initialise with parameters for this particular transaction.)
 %% Returns {ok,ResponderPid} or {error,no_idle_responder}
-get_idle_responder(Tpar,State) ->
+get_idle_responder(_Tpar,State) ->
     wtp_db:get_idle_responder(State#state.tdb).
 
 
 %% Find an idle initiator process, if possible.
 %% (and initialise with parameters for this particular transaction.)
 %% If no processes are available return, {error,no_idle_responder}
-get_idle_initiator(Tpar,State) ->
+get_idle_initiator(_Tpar,State) ->
     case wtp_db:get_idle_initiator(State#state.tdb) of
 	{ok,RespPid} ->
 	    RespPid;
@@ -319,7 +321,7 @@ get_idle_initiator(Tpar,State) ->
 %% FIXME! Segmentation still not supported, i.e. always GTR=1,TTR=1
 invoke(Pdu,Below,Tpar) ->
     case catch wtp_pdu:encode_pdu(Pdu) of
-	BinPdu when binary(BinPdu) ->
+	BinPdu when is_binary(BinPdu) ->
 	    send_segments(Below,Tpar,BinPdu);
 	Error ->
 	    ?error("Cannot encode Pdu ~p got ~p",[Pdu,Error],invoke),
@@ -328,7 +330,7 @@ invoke(Pdu,Below,Tpar) ->
 
 result(Pdu,Below,Tpar) ->
     case catch wtp_pdu:encode_pdu(Pdu) of
-	BinPdu when binary(BinPdu) ->
+	BinPdu when is_binary(BinPdu) ->
 	    send_segments(Below,Tpar,BinPdu);
 	Error ->
 	    ?error("Cannot encode Pdu ~p got ~p",[Pdu,Error],result),
@@ -336,9 +338,9 @@ result(Pdu,Below,Tpar) ->
     end.
 
 send_segments(Wdp,Tpar,Tpdu) ->
-    wdp_man:unitdata_req(Wdp,Tpar,Tpdu);
-send_segments(Wdp,Tpar,Tpdu) ->
-    {error,segmentation_not_implemented}.
+    wdp_man:unitdata_req(Wdp,Tpar,Tpdu).%;
+%send_segments(Wdp,Tpar,Tpdu) ->
+%    {error,segmentation_not_implemented}.
 
 %reassemble() ->
 %    {error,not_implemented}.
@@ -355,12 +357,12 @@ abort(AbortReason,Tid,Below,Tpar) ->
 %% Send respons back to the application (WSP)
 
 %% TR-Abort.ind
-tr_abort_ind(AbortFrom,AbortReason,State) ->
-    Reason=if
-	       AbortFrom==?USER ->    {wsp,AbortReason};
-	       AbortFrom==?PROVIDER ->{wtp,AbortReason}
-	   end,
-    abort_ind(State#state.wsp,self(),Reason).
+%tr_abort_ind(AbortFrom,AbortReason,State) ->
+%    Reason=if
+%	       AbortFrom==?USER ->    {wsp,AbortReason};
+%	       AbortFrom==?PROVIDER ->{wtp,AbortReason}
+%	   end,
+%    abort_ind(State#state.wsp,self(),Reason).
 
 %% -----------------------------------------------------------------------------
 %% As this is only called at the initial try we know that RID=false, RCR=0
@@ -382,11 +384,11 @@ state_null_initiator(Tpar,Content,WSP,WSPdata,State) ->
 
 %% =============================================================================
 %% Transforms to atoms with names as in the state tables in the standard.
-to_abstr(?Invoke) -> rcv_invoke;
-to_abstr(?Ack) ->    rcv_ack;
-to_abstr(?Abort) ->  rcv_abort;
-to_abstr(?Result) -> rcv_result;
-to_abstr(X) -> X. % For any other event, just keep the given integer
+%to_abstr(?Invoke) -> rcv_invoke;
+%to_abstr(?Ack) ->    rcv_ack;
+%to_abstr(?Abort) ->  rcv_abort;
+%to_abstr(?Result) -> rcv_result;
+%to_abstr(X) -> X. % For any other event, just keep the given integer
 
 
 %% =============================================================================

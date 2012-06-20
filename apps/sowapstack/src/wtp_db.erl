@@ -29,7 +29,7 @@
 	 start/0,stop/1]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -include("wtp.hrl").
 
@@ -115,7 +115,7 @@ init(_) ->
 stop(Serverref) ->
     gen_server:call(Serverref,stop).
 
-terminate(Reason,State) ->
+terminate(_Reason,State) ->
     ets:delete(State#state.tdb),
     ets:delete(State#state.initdb),
     ets:delete(State#state.respdb),
@@ -124,6 +124,9 @@ terminate(Reason,State) ->
     ets:delete(State#state.gentid),
     ?trace("Stopped WTP database ok",[],init).
 
+
+code_change(_OldVsn, State, _Extra)->
+    {ok, State}.
 %% =============================================================================
 %% Maintenance
 handle_call(stop, _, Tab) ->
@@ -155,7 +158,7 @@ handle_call({remove_transaction, Ref},_,Tab) ->
 %% Lookup a transaction
 handle_call({lookup_unidata_tid,Ref},_, Tab) ->
     case ets:lookup(Tab#state.tdb,Ref) of
-	[{{_,Trtype,Tid},Entry}] ->
+	[{{_,Trtype,_Tid},Entry}] ->
 	    {reply,{ok,
 		    Entry#transaction.tpid,Trtype,Entry#transaction.tidnew_set
 		   },Tab};
@@ -164,7 +167,7 @@ handle_call({lookup_unidata_tid,Ref},_, Tab) ->
     end;
 handle_call({lookup_tid,Ref},_, Tab) ->
     case ets:lookup(Tab#state.tdb,Ref) of
-	[{{_,Trtype,Tid},Entry}] ->
+	[{{_,Trtype,_Tid},Entry}] ->
 	    {reply,{ok,Entry#transaction.tpid,Trtype},Tab};
 	[] ->
 	    {reply,{error,no_transaction},Tab}
@@ -272,7 +275,7 @@ handle_call({print_tdb,Info},_, Tab) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_cast(Msg, State) ->
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -281,6 +284,6 @@ handle_cast(Msg, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 

@@ -52,7 +52,7 @@
 
 %%% ----------------------------------------------------------------------------
 %%% Internal API
-code_to_mnemonic(Code) when integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
+code_to_mnemonic(Code) when is_integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
     ensure_started(),
     gen_server:call(ucs_data,{code_to_mnemonic,Code}).
 
@@ -60,14 +60,14 @@ mnemonic_to_code(Mnem) ->
     ensure_started(),
     gen_server:call(ucs_data,{mnemonic_to_code,Mnem}).
 
-unicode_data(Code) when integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
+unicode_data(Code) when is_integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
     BlockStart = block_start(Code),
     Key = if BlockStart =/= false -> BlockStart; true -> Code end,
     ensure_started(),
     case gen_server:call(ucs_data,{code_to_unidata,Key}) of
 	undefined ->
 	    #unidata{code=Code,name="<U+" ++ ucs:code_to_string(Code) ++ ">"};
-	Unidata when record(Unidata,unidata) ->
+	Unidata when is_record(Unidata,unidata) ->
 	    if
 		BlockStart =:= false -> Unidata;
 		true ->
@@ -194,7 +194,7 @@ handle_call({mnemonic_to_code,Mnem},_From,State) ->
     handle_mnemonic_to_code(Mnem,State);
 handle_call({to_unicode,Input,Charset},_From,State) ->
     Out=case get_IANAname(Charset) of
-	    CharsetName when atom(CharsetName) ->
+	    CharsetName when is_atom(CharsetName) ->
 		case lists:member(CharsetName,State#state.unicode_mappings) of
 		    true ->
 			use_mapping_to(Input,CharsetName,[]);
@@ -209,7 +209,7 @@ handle_call({to_unicode,Input,Charset},_From,State) ->
     {reply,Out,State};
 handle_call({from_unicode,Input,Charset},_From,State) ->
     Out=case get_IANAname(Charset) of
-	    CharsetName when atom(CharsetName) ->
+	    CharsetName when is_atom(CharsetName) ->
 		case lists:member(CharsetName,State#state.unicode_mappings) of
 		    true ->
 			use_mapping_from(Input,CharsetName,[]);
@@ -295,14 +295,14 @@ is_dir(Dir) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 handle_code_to_unidata(Code,State)
-  when integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
+  when is_integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
     State1 = open_unicode_data(State),
     case State1#state.unicode_data of
 	open ->
 	    case dets:lookup(unicode_data,Code) of
 		[] ->
 		    {reply,undefined,State1};
-		[Unidata] when record(Unidata,unidata) ->
+		[Unidata] when is_record(Unidata,unidata) ->
 		    {reply,Unidata,State1}
 	    end;
 	error ->
@@ -310,7 +310,7 @@ handle_code_to_unidata(Code,State)
     end.
 
 handle_code_to_mnemonic(Code,State)
-  when integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
+  when is_integer(Code), Code >= 0, Code =< 16#7FFFFFFF ->
     State1 = open_ucs_mnemonics_bycode(State),
     case State1#state.ucs_mnemonics_bycode of
 	open ->
@@ -515,11 +515,11 @@ get_IANAname(Charset) ->
     case dets:lookup(mibenum_data,Charset) of
 	[] ->
 	    {error,undefined_charset};
-	[{Charset,MIBnum}] when atom(Charset),integer(MIBnum) ->
+	[{Charset,MIBnum}] when is_atom(Charset),is_integer(MIBnum) ->
 	    case dets:lookup(mibenum_data,MIBnum) of
 		[] ->
 		    {error,undefined_mibenum};
-		[{MIBnum,CharsetName}] when atom(CharsetName),integer(MIBnum) ->
+		[{MIBnum,CharsetName}] when is_atom(CharsetName),is_integer(MIBnum) ->
 		    CharsetName
 	    end;
 	[{Charset,Charset}] -> % Not yet registred with IANA
@@ -527,13 +527,13 @@ get_IANAname(Charset) ->
     end.
 
     
-handle_getMIB(Charset,State) when atom(Charset) ->
+handle_getMIB(Charset,State) when is_atom(Charset) ->
     case dets:lookup(mibenum_data,Charset) of
 	[] ->
 	    {reply,{error,undefined_charset},State};
-	[{Charset,MIBnum}] when atom(Charset),integer(MIBnum) ->
+	[{Charset,MIBnum}] when is_atom(Charset),is_integer(MIBnum) ->
 	    {reply,MIBnum,State};
-	[{Charset,Charset}] when atom(Charset) ->
+	[{Charset,Charset}] when is_atom(Charset) ->
 	    {reply,not_IANA_registered,State}
     end.
 
@@ -542,6 +542,6 @@ handle_getCharset(MIBnum,State) ->
     case dets:lookup(mibenum_data,MIBnum) of
 	[] ->
 	    {reply,{error,undefined_mibenum},State};
-	[{MIBnum,Charset}] when atom(Charset),integer(MIBnum) ->
+	[{MIBnum,Charset}] when is_atom(Charset),is_integer(MIBnum) ->
 	    {reply,Charset,State}
     end.

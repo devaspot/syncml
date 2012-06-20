@@ -20,7 +20,7 @@
 	 stop/1]).
 
 %% Internal gen_fsm callbacks
--export([init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3]).
+-export([init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3, code_change/4]).
 
 
 %% Internal gen_fsm states
@@ -62,7 +62,7 @@ init({WSPses,{Pdu,Env,WTPres,Tpar,Sdb}}) ->
 stop(WSPmet) ->
     gen_fsm:send_event(WSPmet,stop).
 
-terminate(Reason,StateName,State) ->
+terminate(Reason,_StateName,_State) ->
     ?trace("WSP Method stopped:~w",[Reason],terminate).
 
 
@@ -79,7 +79,7 @@ pseudo_abort(WSPmet,Reason) ->
 %% The Server Method state machine
 
 %% >>>The holding state<<<
-holding(Event,_,State) ->
+holding(_Event,_,State) ->
     {reply, {error,invalid_command},holding,State}.
 
 holding(pseudo_release,State) ->
@@ -90,7 +90,7 @@ holding(pseudo_release,State) ->
 holding({pseudo_abort,Reason},State) ->
     tr_abort_req(Reason,State),
     next_state_null(State);
-holding({tr_abort_ind,WTP,Info},State) ->
+holding({tr_abort_ind,_WTP,Info},State) ->
     if
 	Info=={wsp,?DISCONNECT} ->
 	    pseudo_disconnect(State);
@@ -120,14 +120,14 @@ requesting(method_abort_req,_,State) ->
     tr_abort_req(?PEERREQ,State),
     s_method_abort_ind(?USERREQ,State),
     next_state_null(State,ok);
-requesting(Event,_,State) ->
+requesting(_Event,_,State) ->
     {reply, {error,invalid_command},requesting,State}.
 
 requesting({pseudo_abort,Reason},State) ->
     tr_abort_req(Reason,State),
     s_method_abort_ind(Reason,State),
     next_state_null(State);
-requesting({tr_abort_ind,WTPres,Info},State) ->
+requesting({tr_abort_ind,_WTPres,Info},State) ->
     if
 	Info=={wsp,?DISCONNECT} ->
 	    pseudo_disconnect(State);
@@ -153,14 +153,14 @@ processing(method_abort_req,_,State) ->
     tr_abort_req(?PEERREQ,State),
     s_method_abort_ind(?USERREQ,State),
     next_state_null(State,ok);
-processing(Event,_,State) ->
+processing(_Event,_,State) ->
     {reply, {error,invalid_command},processing,State}.
 
 processing({pseudo_abort,Reason},State) ->
     tr_abort_req(Reason,State),
     s_method_abort_ind(Reason,State),
     next_state_null(State);
-processing({tr_abort_ind,WTPres,Info},State) ->
+processing({tr_abort_ind,_WTPres,Info},State) ->
     if
 	Info=={wsp,?DISCONNECT} ->
 	    pseudo_disconnect(State);
@@ -181,14 +181,14 @@ replying(method_abort_req,_,State) ->
     tr_abort_req(?PEERREQ,State),
     s_method_abort_ind(?USERREQ,State),
     next_state_null(State,ok);
-replying(Event,_,State) ->
+replying(_Event,_,State) ->
     {reply, {error,invalid_command},replying,State}.
 
 replying({pseudo_abort,Reason},State) ->
     tr_abort_req(Reason,State),
     s_method_abort_ind(Reason,State),
     next_state_null(State);
-replying({tr_result_cnf,WTPres,Exitinfo},State) ->
+replying({tr_result_cnf,_WTPres,Exitinfo},State) ->
     case ((State#state.env)#env.cap)#cap.ackhead of
 	true ->
 	    s_method_result_cnf(Exitinfo,State);
@@ -196,7 +196,7 @@ replying({tr_result_cnf,WTPres,Exitinfo},State) ->
 	    s_method_result_cnf([],State)
     end,
     next_state_null(State);
-replying({tr_abort_ind,WTPres,Info},State) ->
+replying({tr_abort_ind,_WTPres,Info},State) ->
     if
 	Info=={wsp,?DISCONNECT} ->
 	    pseudo_disconnect(State);
@@ -226,7 +226,7 @@ handle_illegal_event(State) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_event(Event, StateName, StateData) ->
+handle_event(_Event, StateName, StateData) ->
     {next_state, StateName, StateData}.
 
 %%----------------------------------------------------------------------
@@ -238,7 +238,7 @@ handle_event(Event, StateName, StateData) ->
 %%          {stop, Reason, NewStateData}                          |
 %%          {stop, Reason, Reply, NewStateData}                    
 %%----------------------------------------------------------------------
-handle_sync_event(Event, From, StateName, StateData) ->
+handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
 
@@ -248,9 +248,12 @@ handle_sync_event(Event, From, StateName, StateData) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_info(Info, StateName, StateData) ->
+handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
 
+
+code_change(_OldVsn,StateName,State,_Extra)->
+    {ok, StateName, State}.
 %% .............................................................................
 pseudo_disconnect(State) ->
     case wsp_db:lookup_session(State#state.sdb,State#state.tpar) of
@@ -279,7 +282,7 @@ next_state_null(State) ->
     wsp_session_s:remove_method(State#state.wsp),
     {stop,normal,State}.
 
-next_state_null(State,Reply) ->
+next_state_null(State,_Reply) ->
     wsp_db:remove_method(State#state.sdb,{State#state.tpar,State#state.wtp}),
     wsp_session_s:remove_method(State#state.wsp),
     {stop,normal,ok,State}.

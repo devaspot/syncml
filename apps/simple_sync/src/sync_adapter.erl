@@ -5,12 +5,12 @@
 -export([do/1, log/3]).
 
 % SyncML I/F
-message(Msg)->
+message(_Msg)->
     sync_agent:message("SIMPLE_MESSAGE").
 
 do(Req) ->
     case check_headers(Req) of
-    CType ->
+    {ok, CType} ->
 	case CType of
 	"application/vnd.syncml+xml"->
 	    Body = Req#mod.entity_body,
@@ -28,7 +28,7 @@ do(Req) ->
 	ResponseBody = xmerl:export_simple([message(XML)], xmerl_xml),
 	error_logger:info_msg("Response body:", [ResponseBody]),
 	{proceed, [{response, {response, [{content_type, CType}], ResponseBody}}]};
-    false ->
+    {error, false} ->
 	error_logger:info_msg("Request contains unappropriate headers!~p~n", [Req#mod.parsed_header]),
 	done
     end.
@@ -44,9 +44,9 @@ check_headers(Req)->
     % User-Agent:.
     case lists:keyfind("content-type", 1, Req#mod.parsed_header) of
     {_Key, CType} ->
-	CType;
+	{ok, CType};
     false ->
-	false
+	{error, false}
     end.
 
 log(SessionID, Env, _Input) ->

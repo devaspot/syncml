@@ -88,7 +88,7 @@ encode_header0('proxy-authorization',Value,EncVers)->
     V=priv_field(Value),
     [16#a1|wsp_bytecodes_headers:encode_credentials(V,EncVers)];
 encode_header0('vary',Value,EncVers) ->
-    V=clean_token_field(httpd_util:to_lower(Value)),
+    V=clean_token_field(string:to_lower(Value)),
     encode_parsed_headerlist(16#aa,fun encode_header_field/2,V,EncVers);
 encode_header0('www-authenticate',Value,EncVers) ->
     V=priv_field(Value),
@@ -123,7 +123,7 @@ encode_header1('content-location',V) ->
 encode_header1('content-md5',V) ->
     [16#8f|wsp_bytecodes_headers:encode_valuelength(V)++V];
 encode_header1('content-range',Value) ->
-    V=httpd_util:to_lower(Value),
+    V=string:to_lower(Value),
     [16#90|encode_contentrange_val(V)];
 encode_header1('date',Value) ->
     V=date_field(Value),
@@ -217,17 +217,17 @@ encode_header3('encoding-version',V) ->
     [16#c3|wsp_bytecodes_headers:encode_integer(V)];
 encode_header3(_,_) -> {error,no_known_encoding}.
 
-encode_header4('x-wap-security',V) ->
-    [16#c4|wsp_bytecodes_headers:encode_integer(V)];
-encode_header4(_,_) -> {error,no_known_encoding}.
+%encode_header4('x-wap-security',V) ->
+%    [16#c4|wsp_bytecodes_headers:encode_integer(V)];
+%encode_header4(_,_) -> {error,no_known_encoding}.
 
 
-encode_parsed_headerlist(Encoding,Fun,[]) ->
+encode_parsed_headerlist(_Encoding,_Fun,[]) ->
     [];
 encode_parsed_headerlist(Encoding,Fun,[V|Rest]) ->
     [Encoding|Fun(V)] ++ encode_parsed_headerlist(Encoding,Fun,Rest).
 
-encode_parsed_headerlist(Encoding,Fun,[],EncVers) ->
+encode_parsed_headerlist(_Encoding,_Fun,[],_EncVers) ->
     [];
 encode_parsed_headerlist(Encoding,Fun,[V|Rest],EncVers) ->
     [Encoding|Fun(V,EncVers)] ++
@@ -348,7 +348,7 @@ decode_header_value('profile',V)	   -> decode_field_val(V);
 decode_header_value('profile-diff',V)	   -> decode_profile_diff(V);
 decode_header_value('profile-warning',V)   -> decode_profile_warning(V);
 
-decode_header_value(Key,Input) ->
+decode_header_value(_Key,Input) ->
     Value=string:sub_word(Input,1,0),
     Len=length(Value)+1,
     Input1=lists:nthtail(Len,Input),
@@ -486,7 +486,7 @@ decode_accept_charset_general_form([X|Str]) when X>=32,X=<127 -> % Charset
 	[] ->
 	    {ok,Charset};
 	_ ->
-	    {Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
+	    {_Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
 	    {ok,{Charset,[{'q',Qval}]}}
     end;
 decode_accept_charset_general_form(Str) ->    
@@ -495,7 +495,7 @@ decode_accept_charset_general_form(Str) ->
 	[] ->
 	    {ok,Charset};
 	_ ->
-	    {Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
+	    {_Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
 	    {ok,{Charset,[{'q',Qval}]}}
     end.
 
@@ -526,7 +526,7 @@ decode_acceptencoding_val([X|Content]) when 0=<X,X=<31 ->
 	{[],Encoding} ->
 	    {lists:nthtail(Len,C1),Encoding};
 	{Str1,Encoding} ->
-	    {Str2,Par}=wsp_bytecodes_headers:decode_short_integer(Str1),
+	    {_Str2,Par}=wsp_bytecodes_headers:decode_short_integer(Str1),
 	    case wsp_bytecodes_headers:decode_parameter_field(Par) of
 		'q' ->
 		    {[],Qval}=wsp_bytecodes_headers:decode_qval(tl(Str1)),
@@ -594,7 +594,7 @@ decode_accept_language_general_form([X|Str]) when X>=32,X=<127 ->
 	[] ->
 	    {ok,Lang};
 	_ ->
-	    {Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
+	    {_Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
 	    {ok,{Lang,[{'q',Qval}]}}
     end;
 decode_accept_language_general_form(Str) ->    
@@ -603,7 +603,7 @@ decode_accept_language_general_form(Str) ->
 	[] ->
 	    {ok,Lang};
 	_ ->
-	    {Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
+	    {_Str2,Qval}=wsp_bytecodes_headers:decode_qval(Str1),
 	    {ok,{Lang,[{'q',Qval}]}}
     end.
 
@@ -622,7 +622,7 @@ decode_acceptranges_val(Content) ->    decode_field_val(Content).
 %% Section 8.4.2.15
 %% Note that private fields with a quoted string that may have spaces in the
 %% beginning and/or end is handled, but not tab
-encode_cachecontrol_val({Cacheval,[]},EncVers) ->
+encode_cachecontrol_val({Cacheval,[]},_EncVers) ->
     encode_cachecontrol_value(Cacheval);
 encode_cachecontrol_val(V,EncVers) ->
     encode_cachedirective(V,EncVers).
@@ -691,7 +691,7 @@ decode_cachedirective([132|Content]) -> {'min-fresh',decode_integer(Content)};
 decode_cachedirective([135|Content]) -> {private,decode_fields(Content)};
 decode_cachedirective([X|Content]) when X>=32,X=<127 ->
     {C1,Ext}=wsp_bytecodes_headers:decode_token_text([X|Content]),
-    {C2,Par}=wsp_bytecodes_headers:decode_untyped_val(C1),
+    {_C2,Par}=wsp_bytecodes_headers:decode_untyped_val(C1),
     {Ext,Par}.
 
 decode_integer(Content) ->
@@ -803,7 +803,7 @@ decode_contenttype_val(Content) ->
 %% Section 8.4.2.25
 %% Note that this is just a fast hack to get date encoding work...
 %% The real thing should'nt be limited by 
-encode_date_val(V) when tuple(V) ->
+encode_date_val(V) when is_tuple(V) ->
     {Days,Time}=calendar:time_difference({{1970,1,1},{0,0,0}},V),
     Dayssec=Days*86400,
     Timesec=calendar:time_to_seconds(Time),
@@ -821,7 +821,7 @@ decode_date_val(Content) ->
 
 %% .............................................................................
 %% Section 8.4.2.33
-encode_if_range(V) when tuple(V) -> encode_date_val(V);
+encode_if_range(V) when is_tuple(V) -> encode_date_val(V);
 encode_if_range(V) -> wsp_bytecodes_headers:encode_text_string(V).
 
 decode_if_range([A|Content]) when 0=<A,A<31 ->
@@ -831,7 +831,7 @@ decode_if_range(Content) ->
 
 %% .............................................................................
 %% Section 8.4.2.38
-encode_pragma_val('no-cache',EncVers) ->
+encode_pragma_val('no-cache',_EncVers) ->
     [128];
 encode_pragma_val({L,R},EncVers) ->
     C=wsp_bytecodes_headers:encode_parameter(L,R,EncVers),
@@ -914,7 +914,7 @@ decode_range_val(Content) ->
 %% .............................................................................
 %% Section 8.4.2.44
 %% Note: The value length field is not used !
-encode_retryafter_val(Date) when tuple(Date) ->
+encode_retryafter_val(Date) when is_tuple(Date) ->
     C=[128]++encode_date_val(Date),
     wsp_bytecodes_headers:encode_valuelength(C) ++ C;
 encode_retryafter_val(DeltaSec) ->
@@ -968,7 +968,7 @@ encode_warning_val([D1,D2,D3|Value]) ->
 		wsp_bytecodes_headers:encode_text_string(Agent)++
 		wsp_bytecodes_headers:encode_text_string(Text),
 	    wsp_bytecodes_headers:encode_valuelength(C) ++ C;
-	WarningVal-> %% May include Date also
+	_WarningVal-> %% May include Date also
 	    {Text,Agent}=extract_word(Val,[]),
 	    C=wsp_bytecodes_headers:encode_short_integer(Code)++
 		wsp_bytecodes_headers:encode_text_string(Agent)++
@@ -1055,7 +1055,7 @@ encode_method(V,EMlist) -> % No Negotiated Extended Methods !
 
 encode_method_val(V,EMlist) -> % No Negotiated Extended Methods !
     case from_method(V,EMlist) of
-	{no_method,A} ->
+	{no_method,_A} ->
 	    throw({error,invalid_method});
 	A ->
 	    wsp_bytecodes_headers:encode_short_integer(A)
@@ -1079,11 +1079,11 @@ to_method(?Options,_) -> 'OPTIONS';
 to_method(?Head,_) -> 'HEAD';
 to_method(?Delete,_) -> 'DELETE';
 to_method(?Trace,_) -> 'TRACE';
-to_method(X,EMlist) when integer(X),X>=80,X=<95 -> X;
+to_method(X,_EMlist) when is_integer(X),X>=80,X=<95 -> X;
 to_method(?Post,_) -> 'POST';
 to_method(?Put,_) -> 'PUT';
-to_method(X,_) when integer(X),X>=112,X=<127 -> X;
-to_method(A,_) ->
+to_method(X,_) when is_integer(X),X>=112,X=<127 -> X;
+to_method(_A,_) ->
     throw({error,invalid_typecode}).
 
 from_method('GET',_) -> ?Get;
@@ -1093,11 +1093,11 @@ from_method('DELETE',_) -> ?Delete;
 from_method('TRACE',_) -> ?Trace;
 from_method('POST',_) -> ?Post;
 from_method('PUT',_) -> ?Put;
-from_method(A,EMlist) -> % No Negotiated Extended Methods !
+from_method(A,_EMlist) -> % No Negotiated Extended Methods !
     {no_method,A}.
 
 %% .............................................................................
-encode_profile_diff(V) ->
+encode_profile_diff(_V) ->
     [].
 
 decode_profile_diff(Content) ->
@@ -1108,7 +1108,7 @@ encode_profile_warning({Code,Target,Date}) -> % OBS BUG
     C=encode_warning_code(Code)++
 	wsp_bytecodes_headers:encode_uri(Target)++encode_date_val(Date),
     wsp_bytecodes_headers:encode_valuelength(C) ++C;
-encode_profile_warning(V) when integer(V) ->
+encode_profile_warning(V) when is_integer(V) ->
     encode_warning_code(V).
 
 decode_profile_warning([Code|Content]) -> % OBS BUG
@@ -1131,7 +1131,7 @@ decode_warning_code(16#a0,Content) -> {Content,200};
 decode_warning_code(16#a1,Content) -> {Content,201};
 decode_warning_code(16#a2,Content) -> {Content,202};
 decode_warning_code(16#a3,Content) -> {Content,203};
-decode_warning_code(16#a4,Content) -> throw({error,unknown_warning_code}).
+decode_warning_code(16#a4,_Content) -> throw({error,unknown_warning_code}).
 
 
 encode_fields([],_) ->
@@ -1207,7 +1207,7 @@ date_field(Value) ->
 
 %%% ----------------------------------------------------------------------------
 dec_date(Line) ->
-    dec_http_date(httpd_util:to_lower(Line)).
+    dec_http_date(string:to_lower(Line)).
 
 dec_http_date("monday "++Cs) -> dec_date2(Cs);
 dec_http_date("tuesday "++Cs) -> dec_date2(Cs);
@@ -1232,7 +1232,7 @@ dec_date1([D1,D2,$ ,M1,M2,M3,$ ,Y1,Y2,Y3,Y4,$  | Cs]) ->
     M = dec_month([M1,M2,M3]),
     D = list_to_integer([D1,D2]),
     Y = list_to_integer([Y1,Y2,Y3,Y4]),
-    {Time," gmt"++Cs1} = dec_time(Cs),
+    {Time," gmt"++_Cs1} = dec_time(Cs),
     {{Y,M,D},Time}.
 
 %% date2
@@ -1240,7 +1240,7 @@ dec_date2([D1,D2,$-,M1,M2,M3,$-,Y1,Y2 | Cs]) ->
     M = dec_month([M1,M2,M3]),
     D = list_to_integer([D1,D2]),
     Y = 1900 + list_to_integer([Y1,Y2]),
-    {Time, " gmt"++Cs1} = dec_time(Cs),
+    {Time, " gmt"++_Cs1} = dec_time(Cs),
     {{Y,M,D}, Time}.
 
 %% date3
@@ -1249,7 +1249,7 @@ dec_date3([M1,M2,M3,$ ,D1,D2,$ | Cs]) ->
     D = if D1 == $  -> list_to_integer([D2]);
 	   true -> list_to_integer([D1,D2])
 	end,
-    {Time,[$ ,Y1,Y2,Y3,Y4|Cs1]} = dec_time(Cs),
+    {Time,[$ ,Y1,Y2,Y3,Y4|_Cs1]} = dec_time(Cs),
     Y = list_to_integer([Y1,Y2,Y3,Y4]),
     {{Y,M,D}, Time}.
 
@@ -1325,7 +1325,7 @@ encode_field_val(T,C) ->
 	    [length(C)]++C;
 	uintvar ->
 	    pack_uintvar(length(C)) ++ C;
-	text when atom(C) ->
+	text when is_atom(C) ->
 	    atom_to_list(C) ++ [0];
 	text ->
 	    C ++ [0];
@@ -1341,9 +1341,9 @@ decode_field_val(C) ->
     T=hd(C),
     case T of
 	T when T>=0,T=<30 -> % long;
-	    {C1,Data}=wap_common:unpack_data(tl(C),T);
+	    {_C1,_Data}=wap_common:unpack_data(tl(C),T);
 	T when T==31 ->	% uintvar;
-	    {C1,Data}=unpack_uintvar(tl(C));
+	    {_C1,_Data}=unpack_uintvar(tl(C));
 	T when T>=32,T=<127 -> % text;
 	    Str=string:sub_word(C,1,0),
 	    {lists:nthtail(length(Str)+1,C),Str};

@@ -121,7 +121,7 @@ add_mnemonic({Mnem, Code, Name, Comment}) ->
     %% Verify that Name and Comment match that in the unicode data
     %% (except for the control chars)
     case dets:lookup(unicode_data,Code) of
-	[Unidata] when record(Unidata,unidata) ->
+	[Unidata] when is_record(Unidata,unidata) ->
 	    {NameCheck,CommentCheck} =
 		if Unidata#unidata.name =:= "<control>" ->
 			%% Control characters are special
@@ -198,7 +198,7 @@ process_unicode_data_file(InputFile,Blocks) ->
 
 process_unidata_line(Line,Blocks) ->
     case catch parse_unicode_data(Line) of
-	Unidata when record(Unidata,unidata) ->
+	Unidata when is_record(Unidata,unidata) ->
 	    %% The blocks of fixed-data elements need some mangling
 	    %% and extra tracking...
 	    case fixup_blocks(Unidata,Blocks) of
@@ -206,12 +206,12 @@ process_unidata_line(Line,Blocks) ->
 		    %% Normal case: no in a special block
 		    insert_unidata_record(Unidata),
 		    Blocks;
-		Unidata1 when record(Unidata1,unidata) ->
+		Unidata1 when is_record(Unidata1,unidata) ->
 		    %% Start of block: insert modified record, "Blocks"
 		    %% state doesn't change.
 		    insert_unidata_record(Unidata1),
 		    Blocks;
-		Blocks1 when list(Blocks1) ->
+		Blocks1 when is_list(Blocks1) ->
 		    %% End of block: don't insert anything, but "Blocks"
 		    %% state has been modified (indicating that the block
 		    %% has been fully processed).
@@ -282,7 +282,7 @@ process_mibenum_data_file(InputFile) ->
 %%% Note that these do not have a MIB number, insert the name instead.
 process_nonIANA_charsets(InputFile) ->
     case catch file:consult(InputFile) of
-	{ok,NameList} when list(NameList) ->
+	{ok,NameList} when is_list(NameList) ->
 	    process_nonIANA_charsets2(NameList);
 	_ ->
 	    {error,bad_charset_file}
@@ -460,7 +460,7 @@ scan_map_line(InputFile) ->
 	    scan_map_line(InputFile)
     end.
 
-insert_mapping_data(Tab,Char,UniChar) when integer(Char),integer(UniChar) ->
+insert_mapping_data(Tab,Char,UniChar) when is_integer(Char),is_integer(UniChar) ->
     true = ets:insert(Tab,{Char,UniChar}),
     true = ets:insert(Tab,{{UniChar},Char}).
 
@@ -471,7 +471,7 @@ insert_mapping_data(Tab,Char,UniChar) when integer(Char),integer(UniChar) ->
 fixup_blocks(Unidata,Blocks) ->
     case find_code_in_blocks(1,Unidata#unidata.code,Blocks) of
 	false -> false;
-	{low,N} ->
+	{low,_N} ->
 	    Name = Unidata#unidata.name,
 	    BlockName = delete_suffix(Name, ", First>"),
 	    if Name =/= BlockName ->
@@ -509,7 +509,7 @@ fixup_blocks(Unidata,Blocks) ->
 		    end
 	    end,
 	    set_block_processed_flag(N,Blocks);
-	{inside,N} ->
+	{inside,_N} ->
 	    error_logger:info_msg(
 	      "UCS DB WARNING: character (~w) inside fixed block ignored~n",
 	      [Unidata#unidata.code]),
@@ -639,19 +639,19 @@ scan_hex(Str) ->
 %      scan_integer_x(0,0,Str,Base).
 
 scan_integer_d(N,Len,[Digit|Str],Base)
-  when integer(Digit), Digit >= $0, Digit =< $0+Base-1 ->
+  when is_integer(Digit), Digit >= $0, Digit =< $0+Base-1 ->
     scan_integer_d(Base*N+Digit-$0,Len+1,Str,Base);
 scan_integer_d(N,Len,Str,_) ->
     {N,Len,Str}.
 
 scan_integer_x(N,Len,[Digit|Str],Base)
-  when integer(Digit), Digit >= $0, Digit =< $9 ->
+  when is_integer(Digit), Digit >= $0, Digit =< $9 ->
     scan_integer_x(Base*N+Digit-$0,Len+1,Str,Base);
 scan_integer_x(N,Len,[Digit|Str],Base)
-  when integer(Digit), Digit >= $A, Digit =< $A+Base-11 ->
+  when is_integer(Digit), Digit >= $A, Digit =< $A+Base-11 ->
     scan_integer_x(Base*N+Digit-($A-10),Len+1,Str,Base);
 scan_integer_x(N,Len,[Digit|Str],Base)
-  when integer(Digit), Digit >= $a, Digit =< $a+Base-11 ->
+  when is_integer(Digit), Digit >= $a, Digit =< $a+Base-11 ->
     scan_integer_x(Base*N+Digit-($a-10),Len+1,Str,Base);
 scan_integer_x(N,Len,Str,_) ->
     {N,Len,Str}.
@@ -787,7 +787,7 @@ parse_numeric_values("",DigitValue,DigitValue) ->
     {N,_,""} = scan_integer(DigitValue),
     {digit,N};
 parse_numeric_values([Digit],[Digit],[Digit])
-  when integer(Digit), Digit >= $0, Digit =< $9 ->
+  when is_integer(Digit), Digit >= $0, Digit =< $9 ->
     Digit - $0;
 parse_numeric_values(DecimalDigitValue,DigitValue,NumericValue) ->
     error_logger:info_msg(

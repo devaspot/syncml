@@ -93,7 +93,7 @@ encode_headers([{Page,Key,Val}|T],{Page,EncVers},Env,Output) ->
     end;
 encode_headers([{OtherPage,Key,Val}|T],{Page,EncVers},Env,Output) ->
     case lookup_hcp(OtherPage,(Env#env.cap)#cap.header_code_pages) of
-	Code when integer(Code) ->
+	Code when is_integer(Code) ->
 	    EncPage=encode_headercodepage(Code),
 	    Module=list_to_atom("wsp_headers_page"++integer_to_list(Code)),
 	    case catch apply(Module,encode_header,[Key,Val,EncVers]) of
@@ -489,7 +489,7 @@ decode_field2(_,[]) ->
 %% From 8.4.2.1 WSP1.0, Basic encodings
 
 %% Add a quote character (127) if first character is between 128-255
-encode_text_string(Val) when atom(Val) ->
+encode_text_string(Val) when is_atom(Val) ->
     V=atom_to_list(Val),
     case hd(V) of
 	H when 127<H,H<256 ->
@@ -498,7 +498,7 @@ encode_text_string(Val) when atom(Val) ->
     end;
 encode_text_string([H|Val]) when 127<H,H<256 ->
     [127] ++ [H|Val] ++ [0];
-encode_text_string(Val) when list(Val) ->
+encode_text_string(Val) when is_list(Val) ->
     Val ++ [0];
 encode_text_string(_Val) ->
     throw({error,invalid_text_string}).
@@ -515,7 +515,7 @@ decode_text_string(Content) ->
     end.
     
 %% .............................................................................
-encode_token_text(Val) when atom(Val) -> atom_to_list(Val) ++ [0];
+encode_token_text(Val) when is_atom(Val) -> atom_to_list(Val) ++ [0];
 encode_token_text(Val) -> Val ++ [0].
 
 decode_token_text(Content) ->
@@ -533,7 +533,7 @@ decode_quoted_string(Content) ->
     {C1,"\""++Str++"\""}.
 
 %% .............................................................................
-encode_extension_media(Val) when atom(Val) -> atom_to_list(Val) ++ [0];
+encode_extension_media(Val) when is_atom(Val) -> atom_to_list(Val) ++ [0];
 encode_extension_media(Val) -> Val ++ [0].
 
 decode_extension_media(Content) ->
@@ -547,7 +547,7 @@ encode_short_integer(Int) when 0=<Int,Int<128 ->
 %% The MSB might be added already
 encode_short_integer(Int) when 127<Int,Int<256 ->
     [Int];
-encode_short_integer(Int) when atom(Int) ->
+encode_short_integer(Int) when is_atom(Int) ->
     encode_short_integer(atom_to_integer(Int));
 encode_short_integer(_) ->
     throw({error,not_short_integer}).
@@ -639,7 +639,7 @@ decode_text_val(T) ->      decode_token_text(T).
 
 %% .............................................................................
 %% An integer is either a "short-integer", "long-integer", defined above
-encode_integer(A) when list(A) ->
+encode_integer(A) when is_list(A) ->
     encode_integer(list_to_integer(A));
 encode_integer(Int) when Int=<127 -> % "short-integer"
     encode_short_integer(Int);
@@ -660,9 +660,9 @@ decode_integer([H|T]) ->
 
 
 %% Version number 
-encode_version(Version) when atom(Version) ->
+encode_version(Version) when is_atom(Version) ->
     encode_version(atom_to_list(Version));
-encode_version(Version) when list(Version) ->
+encode_version(Version) when is_list(Version) ->
     case content_of_list(Version) of
 	{integer,Major} when 1=<Major,Major=<7 ->
 	    Int=wsp_bytecodes:encode_version_data({Major,15}),
@@ -707,11 +707,11 @@ decode_uri(V) ->
 %% - Well-known Parameter Assignments
 %%   Parmeters in WSP_WELL_KNOWN_PARAMETERS are stored as tuples
 %%   {Encoding,EncodingVersion,ParameterName}
-encode_untyped_val(Val) when integer(Val) ->
+encode_untyped_val(Val) when is_integer(Val) ->
     encode_integer(Val);
-encode_untyped_val(Val) when atom(Val) ->
+encode_untyped_val(Val) when is_atom(Val) ->
     encode_text_val(atom_to_list(Val));
-encode_untyped_val(Val) when list(Val) ->
+encode_untyped_val(Val) when is_list(Val) ->
     case content_of_list(Val) of
 	{text,Val} ->
 	    encode_text_val(Val);
@@ -962,7 +962,7 @@ extract_realm(_,_,_) ->
     throw({error,unexpected_data}).
 
 atom_to_lower(Atom) ->    
-    list_to_atom(httpd_util:to_lower(atom_to_list(Atom))).
+    list_to_atom(string:to_lower(atom_to_list(Atom))).
 
 
 decode_challenge(Content) ->
@@ -1002,7 +1002,7 @@ content_of_list(Val) ->
     end.
 
 
-encode_headercodepage(Page) when integer(Page),Page>=0,Page=<30->
+encode_headercodepage(Page) when is_integer(Page),Page>=0,Page=<30->
     [Page];
 encode_headercodepage(Page) ->
     [?SHIFT_DELIMITER] ++ Page.
@@ -1017,31 +1017,31 @@ print_header_val('accept-encoding',{V,Par}) ->
     flatten(V)++print_parameter_val(Par);
 print_header_val('accept-language',{V,Par}) ->
     flatten(V)++print_parameter_val(Par);
-print_header_val('accept-ranges',Value) when atom(Value) ->
+print_header_val('accept-ranges',Value) when is_atom(Value) ->
     atom_to_list(Value);
-print_header_val('allow',Value) when atom(Value) ->
+print_header_val('allow',Value) when is_atom(Value) ->
     atom_to_list(Value);
 print_header_val('authorization',{basic,B64UidPasswrd}) ->
     atom_to_list('Basic')++" "++B64UidPasswrd;
 print_header_val('authorization',{AuthSch,Par}) ->
     AuthSch++" "++print_sec_parameter_val(Par);
-print_header_val('cache-control',Cadir) when atom(Cadir) ->
+print_header_val('cache-control',Cadir) when is_atom(Cadir) ->
     atom_to_list(Cadir);
-print_header_val('cache-control',Cadir) when list(Cadir) ->
+print_header_val('cache-control',Cadir) when is_list(Cadir) ->
     Cadir;
 print_header_val('cache-control',Par) ->
     print_cache_parameter_val(Par);
-print_header_val('connection',Value) when atom(Value) ->
+print_header_val('connection',Value) when is_atom(Value) ->
     atom_to_list(Value);
-print_header_val('content-encoding',Value) when atom(Value) ->
+print_header_val('content-encoding',Value) when is_atom(Value) ->
     atom_to_list(Value);
-print_header_val('content-range',{Unit,First,Last,Length}) ->    
+print_header_val('content-range',{_Unit,First,Last,Length}) ->    
     "bytes "++
 	integer_to_list(First)++"-"++integer_to_list(Last)++"/"++
 	integer_to_list(Length);
 print_header_val('content-type',{CT,Par}) ->
     flatten(CT)++print_parameter_val(Par);
-print_header_val('pragma',Value) when atom(Value) ->
+print_header_val('pragma',Value) when is_atom(Value) ->
     atom_to_list(Value);
 print_header_val('pragma',{L,[]})  ->
     L;
@@ -1059,7 +1059,7 @@ print_header_val('proxy-authorization',{AuthSch,Par}) ->
     AuthSch++" "++print_sec_parameter_val(Par);
 print_header_val('range',Value) ->
     print_range_val(Value);
-print_header_val('retry-after',Value) when integer(Value) ->
+print_header_val('retry-after',Value) when is_integer(Value) ->
     integer_to_list(Value);
 print_header_val('www-authenticate',{basic,Realm})  ->
     atom_to_list('Basic')++" realm=\""++Realm++"\"";
@@ -1067,7 +1067,7 @@ print_header_val('www-authenticate',{AuthSch,Realm,[]})  ->
     AuthSch++" realm=\""++"\""++Realm;
 print_header_val('www-authenticate',{AuthSch,Realm,Par})  ->
     AuthSch++" realm=\""++Realm++"\","++print_sec_parameter_val(Par);
-print_header_val(Key,Value) ->
+print_header_val(_Key,Value) ->
     flatten(Value).
 
 %% Ordinary Parameters
@@ -1085,10 +1085,10 @@ print_parameter_val([{L,R}|Val]) ->
 %% Parameters to Credential/Challenges
 print_sec_parameter_val([]) ->
     [];
-print_sec_parameter_val([{L,R}|Val]) ->
-    flatten(L) ++ print_sec_parameter_val2(Val);
-print_sec_parameter_val([{L,R}|Val]) ->
-    flatten(L) ++ "=" ++ flatten(R) ++ print_sec_parameter_val2(Val).
+print_sec_parameter_val([{L,_R}|Val]) ->
+    flatten(L) ++ print_sec_parameter_val2(Val).%;
+%print_sec_parameter_val([{L,R}|Val]) ->
+%    flatten(L) ++ "=" ++ flatten(R) ++ print_sec_parameter_val2(Val).
 
 print_sec_parameter_val2([]) ->
     [];
@@ -1116,21 +1116,21 @@ print_range_val({suffix_range,Length}) ->
 print_token_list([]) ->
     [];
 print_token_list([T|V]) ->
-    httpd_util:to_upper(atom_to_list(T))++","++print_token_list(V).
+    string:to_upper(atom_to_list(T))++","++print_token_list(V).
 
 
 %% A temporary solution that just will flatten all output from the header
 %% encoding
 flatten([]) ->
     [];
-flatten(A) when integer(A) ->
+flatten(A) when is_integer(A) ->
     integer_to_list(A);
-flatten(A) when atom(A) ->
+flatten(A) when is_atom(A) ->
     atom_to_list(A);
-flatten(A) when tuple(A) ->
+flatten(A) when is_tuple(A) ->
     List=tuple_to_list(A),
     flatten(List);
-flatten([A]) when list(A) ->
+flatten([A]) when is_list(A) ->
     flatten(A);
 flatten(List) ->
     case isstring(List) of
@@ -1140,23 +1140,23 @@ flatten(List) ->
 	    flatten2(List)
     end.
 
-flatten2([A|L]) when integer(A) ->
+flatten2([A|L]) when is_integer(A) ->
     Str=integer_to_list(A),
     Str ++ [32] ++ flatten(L);
-flatten2([A|L]) when atom(A) ->
+flatten2([A|L]) when is_atom(A) ->
     Str=atom_to_list(A),
     Str ++ [32] ++ flatten(L);
-flatten2([A|L]) when tuple(A) ->
+flatten2([A|L]) when is_tuple(A) ->
     List=tuple_to_list(A),
     flatten(List) ++ [32] ++ flatten(L);
-flatten2([A|L]) when list(A) ->
+flatten2([A|L]) when is_list(A) ->
     List=flatten(A),
     flatten(List) ++ [32] ++ flatten(L).
 
 isstring([]) ->
     true;
-isstring([A|L]) when integer(A),A>=32,A<128 ->
+isstring([A|L]) when is_integer(A),A>=32,A<128 ->
     isstring(L);
-isstring([A|L]) ->
+isstring([_A|_L]) ->
     false.
 

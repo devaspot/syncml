@@ -13,6 +13,12 @@
          push_req/2,confirmed_push_req/2,push_abort_req/1,
          unit_method_invoke_req/5,unit_method_result_req/3,unit_push_req/4
 ]).
+-export([unit_method_invoke_ind/5,unit_method_result_ind/3, unit_push_ind/3, connect_ind/5,
+    disconnect_ind/3, suspend_ind/3, resume_ind/2, method_result_ind/3, push_ind/2, confirmed_push_ind/3,
+    push_abort_ind/3, connect_cnf/4, resume_cnf/2, method_invoke_cnf/2, confirmed_push_cnf/3]).
+
+-export([method_invoke_ind/4, method_abort_ind/3, method_result_cnf/3]).
+
 -export([
 	 connect_res/3,resume_res/1,
 	 method_invoke_res/1,method_result_res/2,confirmed_push_res/2

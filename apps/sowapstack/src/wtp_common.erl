@@ -28,7 +28,7 @@
 %% Timer handling.
 %%% FIXME: - Uses a Default value for all bearer types. Should I abort instead?
 %%%        - Not using TimerVal at all for the moment
-start_retry_timer(Bearer,{TimerVal,UAck},Pid) ->
+start_retry_timer(Bearer,{_TimerVal,_UAck},Pid) ->
     
     Timeout=1000*get_timerval(Bearer,
 			      wap_stack_db:lookup_config(wtp_retry_timer)),
@@ -39,7 +39,7 @@ start_retry_timer(Bearer,{TimerVal,UAck},Pid) ->
 	    throw({error,Reasons})
     end.
 
-start_ack_timer(Bearer,{TimerVal,UAck},Pid) ->
+start_ack_timer(Bearer,{_TimerVal,_UAck},Pid) ->
     Timeout=1000*get_timerval(Bearer,wap_stack_db:lookup_config(wtp_ack_timer)),
     case timer:apply_after(Timeout,gen_fsm,send_event,[Pid,timerTO_A]) of
 	{ok,Ref} ->
@@ -48,7 +48,7 @@ start_ack_timer(Bearer,{TimerVal,UAck},Pid) ->
 	    throw({error,Reasons})
     end.
 
-start_wait_timer(Bearer,{TimerVal,UAck},Pid) ->
+start_wait_timer(Bearer,{_TimerVal,_UAck},Pid) ->
     Timeout=1000*get_timerval(Bearer,
 			      wap_stack_db:lookup_config(wtp_wait_timer)),
     case timer:apply_after(Timeout,gen_fsm,send_event,[Pid,timerTO_W]) of
@@ -98,8 +98,8 @@ max_ack_expirations(BearerType) ->
 %% How?
 %% - Cache incoming requests and send only when buffer is full, on timeout or
 %%   on request (out_queue)
-in_queue(Module,Wdp,Tpar,Type,Data) ->
+in_queue(Module,Wdp,Tpar,_Type,Data) ->
     Module:unitdata_req(Wdp,Tpar,Data).
-out_queue(Tpar) ->
+out_queue(_Tpar) ->
     ok.
 

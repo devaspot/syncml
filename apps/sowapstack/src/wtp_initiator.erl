@@ -19,7 +19,7 @@
 
 %% Internal gen_fsm callbacks
 -export([null/2,result_wait/2, result_resp_wait/2, wait_timeout/2,
-	 init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3]).
+	 init/1,handle_event/3,handle_sync_event/4,handle_info/3,terminate/3, code_change/4]).
 
 -import(wtp_common,[start_ack_timer/3,start_retry_timer/3,start_wait_timer/3,
 		  stop_timer/1]).
@@ -64,7 +64,7 @@ start(Args) ->
     case gen_fsm:start_link(?MODULE,Args,?START_OPTIONS) of
 	{ok,Wtp} ->
 	    Wtp;
-	A ->
+	_A ->
 	    throw({error,cant_start_wtp_initiator})
     end.
 
@@ -77,9 +77,11 @@ stop(Wtp) ->
 init(Tdb) ->
     {ok,null,#state{tdb=Tdb}}.
 
-terminate(Reason,StateName,State) ->
+terminate(_Reason,_StateName,_State) ->
     ok.
 
+code_change(_OldVsn, StateName, State, _Extra)->
+    {ok, StateName, State}.
 %% -----------------------------------------------------------------------------
 %% >>>The null state<<<
 null({tr_invoke_req,Tpar,{TID,TIDNew,Uack,TCL},WSP,WSPdata,WDP},State) ->
@@ -160,7 +162,7 @@ result_wait(timerTO_R, State) ->
     end;
 result_wait(#result_pdu{data=Data}, State) ->
     Bearer=State#state.bearer,    
-    Tid=State#state.tid,
+    _Tid=State#state.tid,
     TCL=State#state.tcl,
     HoldOn=State#state.holdon,
     Uack=State#state.uack,
@@ -169,17 +171,17 @@ result_wait(#result_pdu{data=Data}, State) ->
 	    stop_timer(State#state.retry),
 	    tr_result_ind(Data,State),
 	    A=start_ack_timer(Bearer,{base,Uack},self()),
-	    State1=State#state{ack=A},
+	    _State1=State#state{ack=A},
 	    {next_state, result_resp_wait, State};
 	HoldOn==false,TCL==?CLASS2 ->
 	    stop_timer(State#state.retry),
 	    tr_invoke_cnf([],State),
 	    tr_result_ind(Data,State),
 	    A=start_ack_timer(Bearer,{base,Uack},self()),
-	    State1=State#state{ack=A},
+	    _State1=State#state{ack=A},
 	    {next_state, result_resp_wait, State};
 	true ->
-	    State1=State,
+	    _State1=State,
 	    {next_state, result_wait, State}	    
     end;
 %% OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS OBS 
@@ -253,7 +255,7 @@ wait_timeout(#result_pdu{rid=RID,tpilist=TPIListIn}, State) ->
 	    ack(?FALSE,?FALSE,[],State),
 	    State1=State#state{ack_tidok=true},
 	    {next_state, wait_timeout, State1};
-	{?TRUE,ExitInfo} ->
+	{?TRUE,_ExitInfo} ->
 	    ExitinfoList=State#state.ack_exitinfo,
 	    ack(?FALSE,?FALSE,ExitinfoList,State),
 	    State1=State#state{ack_tidok=true},
@@ -290,7 +292,7 @@ wait_timeout(A,State) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_event(Event, StateName, StateData) ->
+handle_event(_Event, StateName, StateData) ->
     {nextstate, StateName, StateData}.
 
 %%----------------------------------------------------------------------
@@ -302,7 +304,7 @@ handle_event(Event, StateName, StateData) ->
 %%          {stop, Reason, NewStateData}                          |
 %%          {stop, Reason, Reply, NewStateData}                    
 %%----------------------------------------------------------------------
-handle_sync_event(Event, From, StateName, StateData) ->
+handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
 
@@ -312,7 +314,7 @@ handle_sync_event(Event, From, StateName, StateData) ->
 %%          {next_state, NextStateName, NextStateData, Timeout} |
 %%          {stop, Reason, NewStateData}                         
 %%----------------------------------------------------------------------
-handle_info(Info, StateName, StateData) ->
+handle_info(_Info, StateName, StateData) ->
     {nextstate, StateName, StateData}.
 
 

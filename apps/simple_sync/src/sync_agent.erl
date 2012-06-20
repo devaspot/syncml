@@ -53,7 +53,7 @@ template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
 %template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Sync'})->
 %    xmerl_xs:xslapply(fun template/1, E);
 %template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Put'})->
-    gen_fsm:send_event(self(), {put_cmd, E});
+%    gen_fsm:send_event(self(), {put_cmd, E});
 %template(E=#xmlElement{parents=[{'Sync',_}|_], name='Add'})->
 %    gen_fsm:send_event(self(), {add_cmd, E});
 %template(E=#xmlElement{parents=[{'Sync',_}|_], name='Replace'})->

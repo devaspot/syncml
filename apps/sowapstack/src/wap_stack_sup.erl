@@ -33,7 +33,7 @@
 start(StartArgs) ->
     supervisor:start_link(?SSVCALL,?SSVNAME, StartArgs).
 
-stop(State) ->
+stop(_State) ->
     ok.
 
 %%%----------------------------------------------------------------------
@@ -63,9 +63,9 @@ start_stack(Type,WspModule,Sref) ->
 				{Sref,{WspModule,start_link,[{Type,Sref}]},
 				 permanent, 2000, worker,
 				 [WspModule]}) of
-	{ok,Wsp} when Type==wspCL_wdp ->
+	{ok,_Wsp} when Type==wspCL_wdp ->
 	    ok;
-	{ok,Wsp} when Type==wspCO_wtp_wdp ->
+	{ok,_Wsp} when Type==wspCO_wtp_wdp ->
 	    ok
     end.
 
