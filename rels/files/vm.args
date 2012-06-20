@@ -1,5 +1,5 @@
 ## Name of the node
--name sync@synrc.com
+-name sync2@synrc.com
 
 ## Cookie for distributed erlang
 -setcookie node
