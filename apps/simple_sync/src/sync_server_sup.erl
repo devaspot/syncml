@@ -1,6 +1,6 @@
 -module(sync_server_sup).
 -behaviour(supervisor).
--export([start_link/0, start_child/0]).
+-export([start_link/0, start_child/1, start_child/0]).
 -export([init/1]).
 
 start_link() ->
@@ -8,6 +8,9 @@ start_link() ->
 
 start_child()->
     supervisor:start_child(?MODULE, []).
+
+start_child([InitData]) ->
+    supervisor:start_child(?MODULE, [InitData]).
 
 init([])->
     SimpleSync = {simple_sync, {simple_sync, start_link, []},

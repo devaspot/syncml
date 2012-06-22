@@ -2,26 +2,32 @@
 -behaviour(gen_server).
 -export([start_link/1, message/1]).
 -export([init/1, handle_cast/2, handle_call/3, handle_info/2, terminate/2, code_change/3]).
--record(state, {fsm_pid, msg}).
+-record(state, {fsm_pid}).
 -include_lib("xmerl/include/xmerl.hrl").
 
 message(Msg)->
-    {ok, Pid} = sync_agent_sup:start_child(Msg),
-    gen_server:call(Pid, msg).
+    {_, InitData} = lists:keyfind("init_data", 1, Msg),
+    {ok, Pid} = sync_agent_sup:start_child(InitData),
+    gen_server:call(Pid, {msg, Msg}).
+
+% Delegate tasks not related to Sync session to SyncML commands handler 
+% SyncML command objects can transform its data content to XML
+% -sendNextMessage - use response generator to send next message based on the messages in the queue
+% pakage queue, messages
+% -saveSession - save the session info, changelog, mapping, anchors etc.
+% -finishSync
 
 start_link(Msg)->
     gen_server:start_link(?MODULE, [Msg], []).
 
-init([Msg])->
-    template(Msg),
-    State = #state{fsm_pid = fsm_pid(get("session_id"))},
+init([InitData])->
+    {_, SessionID} = lists:keyfind("session_id", 1, InitData),
+    State = #state{fsm_pid = fsm_pid(SessionID)},
     {ok, State}.
 
-handle_call(msg, _From, State )->
-    % Verify message: Final? if no ask for more with Alert 222.
-    % No Alert if Final
-    Result = simple_sync:message(State#state.fsm_pid, State#state.msg),
-    error_logger:info_msg("engine call result:", [Result]),
+handle_call({msg, Msg}, _From, State )->
+    Result = simple_sync:message(State#state.fsm_pid, Msg),
+    error_logger:info_msg("Engine call result:", [Result]),
     {stop, normal, Result, State}.
 
 handle_cast(_Call, State)->
@@ -42,23 +48,3 @@ fsm_pid(SessionId)->
 	sync_store:store(SessionId, Pid),
 	Pid
     end.
-
-% Alert | Atomic | Copy | Exec | Get | Map | Put | Results | Search |Sequence | Status | Sync)+, Final?
-%template(_E=#xmlElement{parents=[{'SyncBody',_}|_], name='Alert'})->
-%    error_loger:info_msg("Alert!");
-template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
-    put("session_id", xmerl_xs:value_of(xmerl_xs:select(".", E)));
-%template(_E=#xmlElement{parents=[{'SyncBody',_}|_], name='Final'})->
-%    error_logger:info_msg("Final");
-%template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Sync'})->
-%    xmerl_xs:xslapply(fun template/1, E);
-%template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Put'})->
-%    gen_fsm:send_event(self(), {put_cmd, E});
-%template(E=#xmlElement{parents=[{'Sync',_}|_], name='Add'})->
-%    gen_fsm:send_event(self(), {add_cmd, E});
-%template(E=#xmlElement{parents=[{'Sync',_}|_], name='Replace'})->
-%    gen_fsm:send_event(self(), {replace_cmd, E});
-%template(E=#xmlElement{parents=[{'SyncBody',_}|_], name='Final'})->
-%    gen_fsm:send_event(self(), {final, E});
-template(E)->
-    xmerl_xs:built_in_rules(fun template/1, E).

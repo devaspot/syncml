@@ -1,12 +1,11 @@
--module(sync_adapter).
+-module	(sync_adapter).
 -include_lib("inets/include/httpd.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
--export([message/1]).
 -export([do/1, log/3]).
 
 % SyncML I/F
-message(_Msg)->
-    sync_agent:message("SIMPLE_MESSAGE").
+message(SyncMLRec)->
+    sync_agent:message(template(SyncMLRec)).
 
 do(Req) ->
     case check_headers(Req) of
@@ -48,6 +47,20 @@ check_headers(Req)->
     false ->
 	{error, false}
     end.
+
+template(E=#xmlElement{name='SyncML'})->
+    lists:flatten(xmerl_xs:xslapply(fun template/1, E));
+template(E=#xmlElement{name = 'SyncHdr'})->
+    [{"init_data", lists:flatten(xmerl_xs:xslapply(fun template/1, E))}];
+template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
+    Session_ID = xmerl_xs:value_of(xmerl_xs:select(".", E)),
+    [{"session_id", lists:nth(1, Session_ID)}];
+template(E=#xmlElement{name = 'SyncBody'})->
+    lists:flatten(xmerl_xs:xslapply(fun template/1, E));
+template(E=#xmlElement{parents=[{'SyncBody',_}|_], name = 'Sync'})->
+    [{"sync", lists:flatten(xmerl_xs:xslapply(fun template/1, E))}];
+template(E) ->
+    xmerl_xs:built_in_rules(fun template/1, E).
 
 log(SessionID, Env, _Input) ->
     mod_esi:deliver(SessionID, ["Content-Type:text/html\r\n\r\n" | log(Env)]).
