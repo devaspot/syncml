@@ -6,9 +6,22 @@
 -include_lib("xmerl/include/xmerl.hrl").
 
 message(Msg)->
-    {_, InitData} = lists:keyfind("init_data", 1, Msg),
+    {_, InitData} = lists:keyfind(init_data, 1, Msg),
     {ok, Pid} = sync_agent_sup:start_child(InitData),
-    gen_server:call(Pid, {msg, Msg}).
+    case lists:keyfind(sync, 1, Msg) of
+    {sync, Sync} ->
+	SyncRes = sync(Pid, Sync);
+    {error, not_found}->
+	SyncRes = no_sync,
+	error_logger:info_msg("Not a sync message.")
+    end,
+    SyncRes.
+
+sync(Pid, Sync)->
+    gen_server:call(Pid, {sync, Sync}).
+
+%start_sync()->
+%    ok.
 
 % Delegate tasks not related to Sync session to SyncML commands handler 
 % SyncML command objects can transform its data content to XML
@@ -16,19 +29,18 @@ message(Msg)->
 % pakage queue, messages
 % -saveSession - save the session info, changelog, mapping, anchors etc.
 % -finishSync
+% finalize sync session by storing sync anchors
 
 start_link(Msg)->
     gen_server:start_link(?MODULE, [Msg], []).
 
 init([InitData])->
-    {_, SessionID} = lists:keyfind("session_id", 1, InitData),
-    State = #state{fsm_pid = fsm_pid(SessionID)},
-    {ok, State}.
+    {ok, #state{fsm_pid=init_engine(InitData)}}.
 
-handle_call({msg, Msg}, _From, State )->
-    Result = simple_sync:message(State#state.fsm_pid, Msg),
-    error_logger:info_msg("Engine call result:", [Result]),
-    {stop, normal, Result, State}.
+handle_call({sync, Sync}, _From, State )->
+    Res = simple_sync:sync(State#state.fsm_pid, Sync),
+    error_logger:info_msg("Engine sync result:", [Res]),
+    {stop, normal, Res, State}.
 
 handle_cast(_Call, State)->
     {noreply, State}.
@@ -39,12 +51,13 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-fsm_pid(SessionId)->
-    case sync_store:lookup(SessionId) of
-    {ok, Pid}->
+init_engine(InitData)->
+    {_, SessionId} = lists:keyfind(session_id, 1, InitData),
+    case sync_store:lookup(SessionId) of 
+    {ok, Pid} ->
 	Pid;
     {error, not_found}->
-	{ok, Pid} = sync_server_sup:start_child(),
+	{ok, Pid} =sync_server_sup:start_child(InitData),
 	sync_store:store(SessionId, Pid),
 	Pid
     end.

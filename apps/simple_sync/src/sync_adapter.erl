@@ -1,7 +1,8 @@
--module	(sync_adapter).
+-module(sync_adapter).
 -include_lib("inets/include/httpd.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
 -export([do/1, log/3]).
+-import(xmerl_xs, [xslapply/2, value_of/1, select/2, built_in_rules/2]).
 
 % SyncML I/F
 message(SyncMLRec)->
@@ -49,18 +50,24 @@ check_headers(Req)->
     end.
 
 template(E=#xmlElement{name='SyncML'})->
-    lists:flatten(xmerl_xs:xslapply(fun template/1, E));
+    lists:flatten(xslapply(fun template/1, E));
 template(E=#xmlElement{name = 'SyncHdr'})->
-    [{"init_data", lists:flatten(xmerl_xs:xslapply(fun template/1, E))}];
+    [{init_data, lists:flatten(xslapply(fun template/1, E))}];
 template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
-    Session_ID = xmerl_xs:value_of(xmerl_xs:select(".", E)),
-    [{"session_id", lists:nth(1, Session_ID)}];
+    Session_ID = value_of(select(".", E)),
+    [{session_id, lists:nth(1, Session_ID)}];
+template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='Target'})->
+    Target = value_of(select("LocURI", E)),
+    [{target, Target}];
+template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='Source'})->
+    Source = value_of(select("LocURI", E)),
+    [{source, Source}];
 template(E=#xmlElement{name = 'SyncBody'})->
-    lists:flatten(xmerl_xs:xslapply(fun template/1, E));
+    lists:flatten(xslapply(fun template/1, E));
 template(E=#xmlElement{parents=[{'SyncBody',_}|_], name = 'Sync'})->
-    [{"sync", lists:flatten(xmerl_xs:xslapply(fun template/1, E))}];
+    [{sync, lists:flatten(xslapply(fun template/1, E))}];
 template(E) ->
-    xmerl_xs:built_in_rules(fun template/1, E).
+    built_in_rules(fun template/1, E).
 
 log(SessionID, Env, _Input) ->
     mod_esi:deliver(SessionID, ["Content-Type:text/html\r\n\r\n" | log(Env)]).
