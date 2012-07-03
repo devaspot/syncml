@@ -345,9 +345,9 @@ decode_wbxml_version(Content) ->
 encode_public_identifier(PI) ->
     [encode_PI(PI)].
 
-decode_public_identifier([0|Content]) ->
-    {C,Index}=unpack_uintvar(Content),
-    {C,{index,Index}};
+%decode_public_identifier([0|Content]) ->
+%    {C,Index}=unpack_uintvar(Content),
+%    {C,{index,Index}};
 decode_public_identifier(Content) ->
     unpack_uintvar(Content).
 
@@ -457,6 +457,8 @@ decode_PI(?WBXML_syncml_11,_) ->
 decode_PI(?WBXML_devinf_11,_) ->
     "<!DOCTYPE devinf PUBLIC \"-//SYNCML//DTD DevInf 1.1//EN\" \"http://www.syncml.org/docs/devinf_v11_20020215.dtd\">";
 decode_PI(?WBXML_syncml_12,_) ->
+    "<!DOCTYPE syncml PUBLIC \"-//SYNCML//DTD SyncML 1.2//EN\" \"http://www.syncml.org/docs/syncml_represent_v11_20020213.dtd\">";
+decode_PI(?WBXML_syncml_12_0,_) ->
     "<!DOCTYPE syncml PUBLIC \"-//SYNCML//DTD SyncML 1.2//EN\" \"http://www.syncml.org/docs/syncml_represent_v11_20020213.dtd\">".%;
 %decode_PI(?WBXML_devinf_12,_) ->
 %    "<!DOCTYPE devinf PUBLIC \"-//SYNCML//DTD DevInf 1.2//EN\" \"http://www.syncml.org/docs/devinf_v11_20020215.dtd\">".

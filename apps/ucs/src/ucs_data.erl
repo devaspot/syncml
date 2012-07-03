@@ -539,9 +539,11 @@ handle_getMIB(Charset,State) when is_atom(Charset) ->
 
 
 handle_getCharset(MIBnum,State) ->
+    io:format("handle:GetCharset ~p",[MIBnum]),
     case dets:lookup(mibenum_data,MIBnum) of
 	[] ->
-	    {reply,{error,undefined_mibenum},State};
+%	    {reply,{error,undefined_mibenum},State};
+	    {reply,'utf-8',State};
 	[{MIBnum,Charset}] when is_atom(Charset),is_integer(MIBnum) ->
 	    {reply,Charset,State}
     end.
