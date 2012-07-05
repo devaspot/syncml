@@ -39,6 +39,7 @@
 -define(WBXML_syncml_11,        16#FD3).
 -define(WBXML_devinf_11,        16#FD4).
 -define(WBXML_syncml_12,        16#1201).
+-define(WBXML_syncml_12_0,      16#0000).
 -define(WBXML_devinf_12,        16#1201).
 
 %%% WBXML info for encoding call back module 
