@@ -39,7 +39,7 @@ init([InitData])->
 
 handle_call({sync, Sync}, _From, State )->
     Res = simple_sync:sync(State#state.fsm_pid, Sync),
-    error_logger:info_msg("Engine sync result:", [Res]),
+    error_logger:info_msg("Engine sync result:", Res),
     {stop, normal, Res, State}.
 
 handle_cast(_Call, State)->

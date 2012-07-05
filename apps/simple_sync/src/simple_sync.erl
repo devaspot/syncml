@@ -25,7 +25,15 @@ init([InitData])->
 
 ready({sync, Sync},  From, State)->
     error_logger:info_msg("FSM is ready, sync!", [Sync]),
-    {reply, ok, ready, State#state{from=From}}.
+    Status = {status, lists:map(fun dispatch_cmd/1, [{Name, Cmd} || {Name, Cmd} <- Sync])},
+    {reply, Status, ready, State#state{from=From}}.
+
+dispatch_cmd({add, Cmd = [{cmd_id, CmdId}|_]})->
+    error_logger:info_msg("Dispatch Add command:", CmdId),
+    Status = add,
+    {Status, [CmdId]};
+dispatch_cmd(_)->
+    {ok}.
 
 handle_event(_Event, StateName, State)->
     {next_state, StateName, State}.

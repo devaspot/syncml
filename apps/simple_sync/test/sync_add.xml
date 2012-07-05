@@ -6,6 +6,9 @@
 <SyncBody>
     <Sync>
     <Add>
+	<CmdID>1</CmdID>
+    </Add>
+    <Add>
 	<CmdID>12345</CmdID>
 	<Cred>
 	    <Meta>

@@ -25,8 +25,8 @@ do(Req) ->
 	    {[X|Acc], S}
 	end,
 	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
-	ResponseBody = xmerl:export_simple([message(XML)], xmerl_xml),
-	error_logger:info_msg("Response body:", [ResponseBody]),
+	ResponseBody = lists:flatten(xmerl:export_simple([message(XML)], xmerl_xml)),
+	error_logger:info_msg("Response body:", ResponseBody),
 	{proceed, [{response, {response, [{content_type, CType}], ResponseBody}}]};
     {error, false} ->
 	error_logger:info_msg("Request contains unappropriate headers!~p~n", [Req#mod.parsed_header]),
@@ -56,16 +56,28 @@ template(E=#xmlElement{name = 'SyncHdr'})->
 template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
     Session_ID = value_of(select(".", E)),
     [{session_id, lists:nth(1, Session_ID)}];
-template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='Target'})->
-    Target = value_of(select("LocURI", E)),
+template(E=#xmlElement{name='CmdID'})->
+    [{cmd_id, lists:nth(1,value_of(select(".", E)))}];
+template(E=#xmlElement{name='Target'})->
+    Target = lists:nth(1,value_of(select("LocURI", E))),
     [{target, Target}];
-template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='Source'})->
-    Source = value_of(select("LocURI", E)),
+template(E=#xmlElement{name='Source'})->
+    Source = lists:nth(1, value_of(select("LocURI", E))),
     [{source, Source}];
 template(E=#xmlElement{name = 'SyncBody'})->
     lists:flatten(xslapply(fun template/1, E));
 template(E=#xmlElement{parents=[{'SyncBody',_}|_], name = 'Sync'})->
     [{sync, lists:flatten(xslapply(fun template/1, E))}];
+template(E=#xmlElement{parents=[{'Sync',_}|_], name='Add'})->
+    [{add, lists:flatten(xslapply(fun template/1, E))}];
+template(E=#xmlElement{name='Item'})->
+    [{item, lists:flatten(xslapply(fun template/1, E))}];
+template(E=#xmlElement{parents=[{'Item',_}|_], name='Data'})->
+    [{data, lists:nth(1, value_of(select(".", E)))}];
+template(E=#xmlElement{name='Meta'})->
+    [];
+template(E=#xmlElement{name='Cred'})->
+    [];
 template(E) ->
     built_in_rules(fun template/1, E).
 
