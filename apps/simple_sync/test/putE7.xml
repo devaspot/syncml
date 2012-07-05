@@ -1,0 +1,58 @@
+<?xml version='1.0'?>
+<SyncML>
+    <SyncHdr>
+	<VerDTD>1.2</VerDTD>
+	<VerProto>SyncML/1.2</VerProto>
+	<SessionID>2</SessionID>
+	<MsgID>1</MsgID>
+	<Target><LocURI>http://synrc.com:8881</LocURI></Target>
+	<Source><LocURI>IMEI:354864043275982</LocURI></Source>
+	<Meta><MaxMsgSize>40000</MaxMsgSize></Meta>
+    </SyncHdr>
+    <SyncBody>
+	<Alert>
+	    <CmdID>1</CmdID>
+	    <Data>201</Data>
+	    <Item>
+		<Target><LocURI>./k</LocURI></Target>
+		<Source><LocURI>./C:Contacts.cdb</LocURI></Source>
+		<Meta><Anchor><Last></Last><Next>20120703T224641Z</Next></Anchor></Meta>
+	    </Item>
+	</Alert>
+	<Put>
+	    <CmdID>2</CmdID>
+	    <Meta><Type>application/vnd.syncml-devinf+wbxml</Type></Meta>
+	    <Item>
+		<Source><LocURI>./devinf12</LocURI></Source>
+		<Data>^B^Cj^@Je√C1.2^AQ√ENokia^AU√EE7-00^AO√@^A^√G025.007^AP√@^AI√T
+			IMEI:354864043275982^AK√Ephone^A(*)G]√P./C:Contacts.cdb^AL√HContacts^AR√A8^AZF√L
+			text/x-vcard^Ad√C2.1^A^AbF√Ltext/x-vcard^Ad√C2.1^A^AEF√L
+			text/x-vcard^Ad√C2.1^AkX√E
+			BEGIN^AH√@^A\√C256^Ac√EVCARD^AL√EBegin^A^AkX√CEND^AH√@^A\√C256^Ac√EVCARD^AL√CEnd^A^AkX√GVERSION^AH√@^A\√C256^Ac√C2.1^AL√G
+			Version^A^AkX√CREV^AH√@^A\√C256^AL√HRevision^A^AkX√AN^AH√@^A\√C256^AL√DName^A^AkX√CADR^AH√@^A\√C256^AL√GAddress^AlW√DTYPE^AH√@^Ac√DHOME^Ac√DWORK^AL√DType^A^A^AkX√CTEL^AH√@^A\√C256^AL√PTelephone number^AlW√DTYPE^AH√@^Ac√DHOME^Ac√DWORK^Ac√EVOICE^Ac√DCELL^Ac√EPAGER^Ac√CFAX^Ac√EVIDEO^Ac√DPREF^Ac√CCAR^AL√DType^A^A^AkX√BFN^AH√@^A\√C256^AL√HFullName^A^AkX√EEMAIL^AH√@^Email address^AlW√DTYPE^AH√@^Ac√HINTERNET^Ac√DHOME^Ac√DWORK^Ac√DPREF^AL√DType^A^A^AkX√CGEO^AH√@^A\√C256^AL√KGEO Address^AlW√DTYPE^AH√@^Ac√DHOME^Ac√DWORK^AL√DType^A^A^AkX√CURL^AH√@^A\√C256^AL√KURL address^AlW√DTYPE^AH√@^Ac√DHOME^Ac√DWORK^Ac√DPREF^AL√DType^A^A^AkX√DNOTE^AH√@^A\√D1000^AL√DNote^A^AkX√ETITLE^AH√@^A\√C256^AL√ETitle^A^AkX√CORG^AH√@^A\√C256^AL√L
+			Organisation^A^AkX√EPHOTO^AH√@^A\√C256^AL√E
+			Photo^A^AkX√DBDAY^AH√@^A\√C256^AL√H
+			Birthday^A^AkX√E
+			SOUND^AH√@^A\√C256^AL√ESound^A^AkX√GX-WV-ID^AH√@^A\√C256^AL√S
+			Wireless Village Id^A^AkX√KX-X-ANNIVERSARY^AH√@^A\√C256^AL√K
+			Anniversary^A^AkX√HX-SPOUSE^AH√@^A\√C256^AL√F
+			Spouse^A^AkX√t phone^A^AkX√	Children^A^AkX√		Nickname^A^AkX√GX-CLASS^AH√@^A\√C256^Ac√F
+			PUBLIC^Ac√GPRIVATE^Ac√L
+			CONFIDENTIAL^AL√EClass^A^AkX√FX-IMPP^AH√@^A\√C256^AL√DIMPP^AlW√DTYPE^AH√@^Ac√H
+			PERSONAL^Ac√DHOME^Ac√DWORK^Ac√H
+			BUSINESS^Ac√F
+			MOBILE^Ac√DPREF^AL√DType^A^A^AkX√	Top Contact^A^AkX√FX-SELF^AH√@^A\√C256^AL√G
+			My Card^A^AkX√EX-SIP^AH√@^A\√C256^AL√L
+			SIP protocol^AlW√DTYPE^AH√@^Ac√CPOC^Ac√DSWIS^Ac√DVOIP^Ac√DWORK^Ac√DHOME^AL√DType^A^A^AkX√L
+			X-CATEGORIES^AH√@^A\√C256^AL√	
+		</Data>
+	    </Item>
+	</Put>
+	<Get>
+	    <CmdID>3</CmdID>
+	    <Meta><Type>application/vnd.syncml-devinf+wbxml</Type></Meta>
+	    <Item><Target><LocURI>./devinf12</LocURI></Target></Item>
+	</Get>
+	<Final/>
+    </SyncBody>
+</SyncML>
