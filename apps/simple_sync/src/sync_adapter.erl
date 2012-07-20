@@ -6,15 +6,17 @@
 
 % SyncML I/F
 message(SyncMLRec)->
-    sync_agent:message(template(SyncMLRec)).
+    [{_, InitData}|Body] = template(SyncMLRec),
+    Response = simple_sync:message(init_engine(InitData), Body),
+    {'SyncML', [{'SyncHdr', []}, {'SyncBody', Response}]}.
 
+%% httpd
 do(Req) ->
     case check_headers(Req) of
     {ok, CType} ->
 	case CType of
 	"application/vnd.syncml+xml"->
-	    Body = Req#mod.entity_body,
-	    error_logger:info_msg("Content-type parsed, syncml+xml", []);
+	    Body = Req#mod.entity_body;
 	"application/vnd.syncml+wbxml"->
 	    {ok, Body} = wbxml:xml(Req#mod.entity_body),
 	    error_logger:info_msg("Encoded xml:~s~n", [Body])
@@ -26,19 +28,28 @@ do(Req) ->
 	end,
 	{XML, _Rest} = xmerl_scan:string(lists:flatten(io_lib:format("~s",[Body])), [{space, normalize}, {acc_fun, Acc}]),
 	ResponseBody = lists:flatten(xmerl:export_simple([message(XML)], xmerl_xml)),
-	error_logger:info_msg("Response body:", ResponseBody),
+	error_logger:info_msg("Response body ~p~n:", ResponseBody),
 	{proceed, [{response, {response, [{content_type, CType}], ResponseBody}}]};
     {error, false} ->
 	error_logger:info_msg("Request contains unappropriate headers!~p~n", [Req#mod.parsed_header]),
 	done
     end.
 
+%% Utils
+init_engine(InitData)->
+    {_, SessionID} = lists:keyfind('SessionID', 1, InitData),
+    case sync_store:lookup(SessionID) of
+    {ok, Pid} ->
+	Pid;
+    {error, not_found}->
+	{ok, Pid} =sync_server_sup:start_child(InitData),
+	sync_store:store(SessionID, Pid),
+	Pid
+    end.
+
 check_headers(Req)->
-    % TODO: Request/response headers, methods etc.
-    % - General
     % Cache-Control:no-store / private
     % Transfer-Encoding: chunked
-    % - Request
     % Accept: mediatype
     % Accept-Charset:utf-8 or status 406
     % User-Agent:.
@@ -49,38 +60,42 @@ check_headers(Req)->
 	{error, false}
     end.
 
+%% Parser
 template(E=#xmlElement{name='SyncML'})->
     lists:flatten(xslapply(fun template/1, E));
 template(E=#xmlElement{name = 'SyncHdr'})->
-    [{init_data, lists:flatten(xslapply(fun template/1, E))}];
+    {init_data, xslapply(fun template/1, E)};
 template(E=#xmlElement{parents=[{'SyncHdr',_}|_], name='SessionID'})->
-    Session_ID = value_of(select(".", E)),
-    [{session_id, lists:nth(1, Session_ID)}];
+    [SessionID|[]] = value_of(select(".", E)),
+    {'SessionID', SessionID};
 template(E=#xmlElement{name='CmdID'})->
-    [{cmd_id, lists:nth(1,value_of(select(".", E)))}];
-template(E=#xmlElement{name='Target'})->
-    Target = lists:nth(1,value_of(select("LocURI", E))),
-    [{target, Target}];
+    [CmdID|[]] = value_of(select(".", E)),
+    {'CmdID', CmdID};
+template(E=#xmlElement{name='Target'}) ->
+    [LocURI|[]] = value_of(select("LocURI", E)),
+    {'Target', LocURI};
 template(E=#xmlElement{name='Source'})->
-    Source = lists:nth(1, value_of(select("LocURI", E))),
-    [{source, Source}];
+    [LocURI|[]] = value_of(select("LocURI", E)),
+    {'Source', LocURI};
 template(E=#xmlElement{name = 'SyncBody'})->
-    lists:flatten(xslapply(fun template/1, E));
+    xslapply(fun template/1, E);
 template(E=#xmlElement{parents=[{'SyncBody',_}|_], name = 'Sync'})->
-    [{sync, lists:flatten(xslapply(fun template/1, E))}];
+    {'Sync', xslapply(fun template/1, E)};
 template(E=#xmlElement{parents=[{'Sync',_}|_], name='Add'})->
-    [{add, lists:flatten(xslapply(fun template/1, E))}];
+    {'Add', xslapply(fun template/1, E)};
 template(E=#xmlElement{name='Item'})->
-    [{item, lists:flatten(xslapply(fun template/1, E))}];
+    {'Item', xslapply(fun template/1, E)};
 template(E=#xmlElement{parents=[{'Item',_}|_], name='Data'})->
-    [{data, lists:nth(1, value_of(select(".", E)))}];
-template(E=#xmlElement{name='Meta'})->
-    [];
-template(E=#xmlElement{name='Cred'})->
-    [];
+    [Data|[]] = value_of(select(".", E)),
+    {'Data', Data};
+template(_E=#xmlElement{name='Final'})->
+    {'Final', ok};
+template(_E=#xmlElement{name=Name})->
+    {Name, []};
 template(E) ->
     built_in_rules(fun template/1, E).
 
+%% Log
 log(SessionID, Env, _Input) ->
     mod_esi:deliver(SessionID, ["Content-Type:text/html\r\n\r\n" | log(Env)]).
 
