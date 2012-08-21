@@ -9,8 +9,7 @@
       stdlib,
       sasl,
       xmerl,
-      ucs,
-      sowapstack
+      ucs
    ]},
   {mod, {wbxml_app, []}},
   {env, []}]}.

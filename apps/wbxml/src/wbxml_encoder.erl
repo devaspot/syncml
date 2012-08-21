@@ -9,11 +9,12 @@
 %
 % usage:
 %
-%     wbxml:decode(list()) -> {ok, XML} | {error, Reason}
+%     wbxml_encoder:decode(list()) -> {ok, XML} | {error, Reason}
 
 -export([encode/4,decode/1,add_string/2,lookup_index/2,get_bin/2]).
 -export([start_link/0, init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([xml/1]).
+-export([decode_string/1, encode_string/1]). % wsp_bytecodes 
 -include("xmerl.hrl").
 -include("wbxml_log.hrl").
 -include("wbxml_bytecodes.hrl").
@@ -55,6 +56,29 @@ terminate(_Reason, _State)->
     ok.
 code_change(_OldVsn, State, _Extra)->
     {ok, State}.
+
+%-------------------------------------------------------------------------------
+% From sowapstack wsp_bytecodes
+
+%% Extracts a string, in particular empty strings are possible
+%% Removes extra 0 and return a tuple {Rest, String}
+decode_string([0])->
+    {[],[]};
+decode_string([0|Rest])->
+    {Rest, []};
+decode_string(C)->
+    case string:chr(C,0) of
+    0 ->
+	throw({error, illegal_textstring});
+    X ->
+	{lists:nthtail(X,C), lists:sublist(C,1,X-1)}
+    end.
+
+%% Adds an extra 0
+encode_string(Str) when is_atom(Str) ->
+    list_to_binary(atom_to_list(Str)++[0]);
+encode_string(Str) ->
+    list_to_binary(Str++[0]).
 
 % ------------------------------------------------------------------------------
 %% Pack a number into upto 5 bytes, with 7 bits each.
@@ -278,6 +302,7 @@ guess_charset(C) ->
 
 %%% ============================================================================
 decode(Content) ->
+    error_logger:info_msg("WBXML encoder starts decode(Content)"),
     {Content1,WBXMLVers}=decode_wbxml_version(Content),
     BinWBXMLVers=get_bin(Content,Content1),
     io:format("WBXMLVersion: ~p from ~p~n",[WBXMLVers,BinWBXMLVers]),
@@ -482,7 +507,7 @@ create_erl_stringtable(Data) ->
 create_erl_stringtable(StrTab,[],_) ->
     StrTab;
 create_erl_stringtable(StrTab,Data,Index) ->
-    {Data1,Str}=wsp_bytecodes:decode_string(Data),
+    {Data1,Str}=decode_string(Data),
     create_erl_stringtable([{Index,Str}|StrTab],Data1,Index+length(Str)+1).
 
 create_wbxml_stringtable([],_) ->
@@ -494,7 +519,7 @@ create_wbxml_stringtable2([],_) ->
     [];
 create_wbxml_stringtable2([{_,Str}|Rest],Charset) ->
     Str2=ucs:from_unicode(Str,Charset),
-    binary_to_list(wsp_bytecodes:encode_string(Str2))++
+    binary_to_list(encode_string(Str2))++
     create_wbxml_stringtable2(Rest,Charset).
 
 remove_stringtable(_StrTbl) ->
@@ -616,18 +641,18 @@ global_wbxml_code(?WBXML_ENTITY,Content,_StrTbl,Charset) ->
     {Content2,Entity}=wbxml_encoder:unpack_uintvar(Content),
     {Content2,lookup_entity(Entity,Charset)};
 global_wbxml_code(?WBXML_STR_I,Content,_StrTbl,_) ->
-    wsp_bytecodes:decode_string(Content);
+    decode_string(Content);
 global_wbxml_code(?WBXML_STR_T,Content,StrTbl,_) ->
     {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
     {Content2,wbxml_encoder:lookup_index(StrTbl,Index)};
 global_wbxml_code(?WBXML_EXT_I_0,Content,_StrTbl,_) ->
-    {Content2,Str}=wsp_bytecodes:decode_string(Content),
+    {Content2,Str}=decode_string(Content),
     {Content2,"$$("++Str++":escape)"};
 global_wbxml_code(?WBXML_EXT_I_1,Content,_StrTbl,_) ->
-    {Content2,Str}=wsp_bytecodes:decode_string(Content),
+    {Content2,Str}=decode_string(Content),
     {Content2,"$$("++Str++":unesc)"};
 global_wbxml_code(?WBXML_EXT_I_2,Content,_StrTbl,_) ->
-    {Content2,Str}=wsp_bytecodes:decode_string(Content),
+    {Content2,Str}=decode_string(Content),
     {Content2,"$$("++Str++")"};
 global_wbxml_code(?WBXML_EXT_T_0,Content,StrTbl,_) ->
     {Content2,Index}=wbxml_encoder:unpack_uintvar(Content),
